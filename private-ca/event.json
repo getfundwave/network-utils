@@ -1,0 +1,16 @@
+{"auth": {
+        "amzDate": "20230622T124133Z", 
+        "authorizationHeader": "AWS4-HMAC-SHA256 Credential=ASIAVKZF47HIBE5VYGHP/20230622/ap-south-1/sts/aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature=cd5dc4732c5967c067691ea1bac2a4f988189f2bb71c3d53aabff3c9d1478864", 
+        "sessionToken": "IQoJb3JpZ2luX2VjEH0aCmFwLXNvdXRoLTEiSDBGAiEAwKCn4CisD/5vCwGqVlBa6e7GJqyRwniflw6lv+nHcT8CIQCxrgwTTYY+Dl/bxNjpYjiDxOOvyeodqyFPYDz5ltmcASr0AQjW//////////8BEAEaDDM2Njc2MjMyNjQ4MCIMtsxFJMeOiT1nikSGKsgBsNXYCmBVHMKmGxJLBUOgxlr+faS+xEEBre6Yo4GlFsHCwMMCBdowAi1PF+2qV3MB/U+Mj6FHeka/iSa+6mNcTYFA/bSx30KxVbO1QDYfQBRgShzRfMTGA3aNUJSIMj8dSgTFR2/HAqAUor/ROAicO7XO5URLCdlgt6Y4qrw/sfpq8wZOFVswoADhW0ABIHINJlZehLb2LV6gexgnl4jiKFgBj2k/0w5w5Gon0YYoPhY4b105Oh+JzkUUT1UHWVVdp4s8d+azrN4w24HRpAY6lwEXFuSzxh+otNnXHbR918jboXfwEUi8sqHtJcud3iwWS1mYToW8ZdYbkRtt1nS9ZObBgE7abIApAF0iiKUPWq8P9Sxrt9L+OTUKTy2gXzq0G3SNUbfRFqj6bMpVXdwU28ih1u8qaK83N7S+DcBurj7gylAx9eKvc1kNpQguTbfLXvQYellm62NCgNE+ArwBqiJhw9plfdd2"
+    },
+    "sslAttrs": {
+        "validityPeriod": "",
+        "clientPublicKeyPem": ""
+    },
+    "sshAttrs": {
+        "validity": "",
+        "sshHostRSAKey": "",
+        "sshClientRSAKey": ""
+    },
+    "action": "generateRootX509Cert"
+    }
