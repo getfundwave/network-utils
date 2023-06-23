@@ -3,9 +3,10 @@ import md from 'node-forge';
 import { generateRootX509Cert } from './generate-root-x509-cert.js';
 import { getSecret } from './secret-manager-utils.js';
 
-export const generateClientX509Cert = async (callerIdentity, secret, sslAttrs) => {
+export const generateClientX509Cert = async (callerIdentity, secret, event) => {
 
   const pki = forge.pki;
+  const sslAttrs = event.sslAttrs;
 
   const arn = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Arn;
   const roleName = arn.match(/\/([^/]+)$/)?.[1];
@@ -19,8 +20,8 @@ export const generateClientX509Cert = async (callerIdentity, secret, sslAttrs) =
   if(!(rootCertKey in secret))
   {
     console.log("No root certificate found. Creating new root certificate.")
-    await generateRootX509Cert(secret);
-    secret = await getSecret('privateCA');
+    await generateRootX509Cert(secret, event);
+    secret = await getSecret(event.awsSecretsRegion, 'privateCA');
   }
   let rootCertPem = Buffer.from(secret['rootX509cert'], 'base64').toString('utf-8');
   const rootCert = pki.certificateFromPem(rootCertPem);

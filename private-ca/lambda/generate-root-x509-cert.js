@@ -1,7 +1,7 @@
 import forge from 'node-forge';
 import { updateSecret } from './secret-manager-utils.js';
 
-export const generateRootX509Cert = async (secret) => {
+export const generateRootX509Cert = async (secret, event) => {
 
   let publicKeyPem = Buffer.from(secret.root_ssl_public_key, 'base64').toString('utf-8');
   let publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
@@ -31,6 +31,6 @@ export const generateRootX509Cert = async (secret) => {
   cert.sign(privateKey, forge.md.sha256.create());
 
   let rootX509Cert = forge.pki.certificateToPem(cert);
-  await updateSecret('privateCA', 'rootX509cert', Buffer.from(rootX509Cert).toString('base64'));
+  await updateSecret(event.awsSecretsRegion, 'privateCA', 'rootX509cert', Buffer.from(rootX509Cert).toString('base64'));
 
 }

@@ -1,10 +1,12 @@
 import https from 'https';
 
-export const getCallerIdentity = (auth) => {
+export const getCallerIdentity = (event) => {
     
-    const host = 'sts.ap-south-1.amazonaws.com';
-    const path = '/';
-    const payload = 'Action=GetCallerIdentity&Version=2011-06-15';
+  const auth = event.auth;
+  const region = event.awsSTSRegion;
+  const host = 'sts.' + region + '.amazonaws.com';
+  const path = '/';
+  const payload = 'Action=GetCallerIdentity&Version=2011-06-15';
     
     // Set the headers
     const headers = {
@@ -41,7 +43,6 @@ export const getCallerIdentity = (auth) => {
         });
         
         req.on('error', (error) => {
-        //   console.error('Error:', error);
             reject(new Error(error));
         });
         

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-CA_LAMBDA_FUNCTION_NAME="privateCA"
+CA_LAMBDA_FUNCTION_NAME=${1:-"privateCA"}
+AWS_STS_REGION=${2:-"ap-south-1"}
+AWS_SECRETS_REGION=${3:-"ap-south-1"}
 
 # Edit values here
 ######################################################
@@ -33,7 +35,7 @@ SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Credentials.SessionToken")
 python -m venv env && source env/bin/activate
 pip install boto3
 
-output=$(python auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN)
+output=$(python auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_REGION)
 auth_header=$(echo $output | jq -r ".Authorization")
 date=$(echo $output | jq -r ".Date")
 
@@ -51,7 +53,9 @@ echo "{\"auth\": {
         \"sshHostRSAKey\": \"${SSH_HOST_RSA_PUBKEY}\",
         \"sshClientRSAKey\": \"${SSH_CLIENT_RSA_PUBKEY}\"
     },
-    \"action\": \"${CA_ACTION}\"
+    \"action\": \"${CA_ACTION}\",
+    \"awsSTSRegion\": \"${AWS_STS_REGION}\",
+    \"awsSecretsRegion\": \"${AWS_SECRETS_REGION}\"
     }" > event.json
 
 

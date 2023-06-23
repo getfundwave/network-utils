@@ -8,10 +8,10 @@ import { getSecret } from './secret-manager-utils.js';
 export const handler = async (event) => {
   
   // auth
-  const callerIdentity = await getCallerIdentity(event.auth);
+  const callerIdentity = await getCallerIdentity(event);
 
   // secret
-  const secret = await getSecret('privateCA');
+  const secret = await getSecret(event.awsSecretsRegion, 'privateCA');
   
   // action
   let res = {};
@@ -32,14 +32,14 @@ export const handler = async (event) => {
       }
       return res;
     case "generateRootX509Cert":
-      generateRootX509Cert(secret)
+      generateRootX509Cert(secret, event)
       res = {
         statusCode: 200,
         body: "Generated root X.509 certificate successfully"
       }
       return res;
     case "generateClientX509Cert":
-      const clientSSLCert = await generateClientX509Cert(callerIdentity, secret, event.sslAttrs);
+      const clientSSLCert = await generateClientX509Cert(callerIdentity, secret, event);
       res = {
         statusCode: 200,
         body: JSON.stringify(clientSSLCert)
