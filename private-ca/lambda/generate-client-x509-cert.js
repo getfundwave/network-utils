@@ -1,7 +1,5 @@
 import forge from 'node-forge';
 import md from 'node-forge';
-import { generateRootX509Cert } from './generate-root-x509-cert.js';
-import { getSecret } from './secret-manager-utils.js';
 
 export const generateClientX509Cert = async (callerIdentity, secret, event) => {
 
@@ -19,9 +17,11 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
   let rootCertKey = 'rootX509cert';
   if(!(rootCertKey in secret))
   {
-    console.log("No root certificate found. Creating new root certificate.")
-    await generateRootX509Cert(secret, event);
-    secret = await getSecret(event.awsSecretsRegion, 'privateCA');
+    console.log("No root certificate found. Aborting creation of client X.509 certificate.");
+    return {
+      statusCode: 500,
+      body: "No root certificate found."
+    };
   }
   let rootCertPem = Buffer.from(secret['rootX509cert'], 'base64').toString('utf-8');
   const rootCert = pki.certificateFromPem(rootCertPem);
@@ -62,5 +62,8 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
 
   // Convert the signed client certificate to PEM format
   const clientCertPem = pki.certificateToPem(clientCert);
-  return clientCertPem;
+  return {
+    statusCode: 200,
+    body: clientCertPem
+  };
 }

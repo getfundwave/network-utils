@@ -13,7 +13,8 @@ ssh-keygen -t rsa -b 4096 -f host_ca -C host_ca -N ""
 ssh-keygen -t rsa -b 4096 -f user_ca -C user_ca -N ""
 
 openssl genrsa -out key.pem 2048
-openssl rsa -in key.pem -outform PEM -pubout -out public.pem
+openssl rsa -in key.pem -outform PEM -pubout -out public.PEM
+openssl req -new -x509 -key key.pem -out root.crt -days 365 -subj "/C=US/ST=California/L=YourCity/O=Fundwave/OU=Fundwave/CN=FundwaveCA"
 
 HOST_CA_PRIVATE_KEY=$(cat host_ca | base64 -w 0)
 HOST_CA_PUBLIC_KEY=$(cat host_ca.pub | base64 -w 0)
@@ -21,8 +22,9 @@ USER_CA_PRIVATE_KEY=$(cat user_ca | base64 -w 0)
 USER_CA_PUBLIC_KEY=$(cat user_ca.pub | base64 -w 0)
 ROOT_SSL_PRIVATE_KEY=$(cat key.pem | base64 -w 0)
 ROOT_SSL_PUBLIC_KEY=$(cat public.pem | base64 -w 0)
+ROOT_SSL_CERT=$(cat root.pem | base64 -w 0)
 
-echo "{\"host_ca\": \"${HOST_CA_PRIVATE_KEY}\", \"host_ca.pub\": \"${HOST_CA_PUBLIC_KEY}\", \"user_ca\": \"${USER_CA_PRIVATE_KEY}\",\"user_ca.pub\": \"${USER_CA_PUBLIC_KEY}\",\"root_ssl_private_key\": \"${ROOT_SSL_PRIVATE_KEY}\",\"root_ssl_public_key\": \"${ROOT_SSL_PUBLIC_KEY}\"}" | jq . > secret.json
+echo "{\"host_ca\": \"${HOST_CA_PRIVATE_KEY}\", \"host_ca.pub\": \"${HOST_CA_PUBLIC_KEY}\", \"user_ca\": \"${USER_CA_PRIVATE_KEY}\",\"user_ca.pub\": \"${USER_CA_PUBLIC_KEY}\",\"root_ssl_private_key\": \"${ROOT_SSL_PRIVATE_KEY}\",\"root_ssl_public_key\": \"${ROOT_SSL_PUBLIC_KEY}\", \"rootX509cert\": \"${ROOT_SSL_CERT}\"}" | jq . > secret.json
 
 # Create Secret
 SECRET_ARN=$(aws secretsmanager create-secret \

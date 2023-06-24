@@ -1,7 +1,6 @@
 import { signHostSSHCertificate } from './generate-host-ssh-cert.js';
 import { signClientSSHCertificate } from './generate-client-ssh-cert.js';
 import { getCallerIdentity } from './get-caller-identity.js';
-import { generateRootX509Cert } from './generate-root-x509-cert.js';
 import { generateClientX509Cert } from './generate-client-x509-cert.js';
 import { getSecret } from './secret-manager-utils.js';
   
@@ -31,19 +30,8 @@ export const handler = async (event) => {
         body: JSON.stringify(clientSSHCert)
       }
       return res;
-    case "generateRootX509Cert":
-      generateRootX509Cert(secret, event)
-      res = {
-        statusCode: 200,
-        body: "Generated root X.509 certificate successfully"
-      }
-      return res;
     case "generateClientX509Cert":
-      const clientSSLCert = await generateClientX509Cert(callerIdentity, secret, event);
-      res = {
-        statusCode: 200,
-        body: JSON.stringify(clientSSLCert)
-      }
+      const res = await generateClientX509Cert(callerIdentity, secret, event);
       return res;
     default:
       console.log("Invalid Action")

@@ -32,7 +32,6 @@ You can modify the variables in the script to change the payload:
 - `CA_ACTION`
   - getHostSSHCert
   - getClientSSHCert
-  - generateRootX509Cert
   - generateClientX509Cert
 - `SSL_ATTRS_VALIDITY` - The validity of the generated certificate in days
 - `SSL_CLIENT_PUBKEY_PEM` - Public Key of the client to be signed for generating client SSL certificate

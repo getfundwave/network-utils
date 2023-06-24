@@ -8,7 +8,6 @@ AWS_SECRETS_REGION=${3:-"ap-south-1"}
 ######################################################
 # CA_ACTION="getHostSSHCert"
 # CA_ACTION="getClientSSHCert"
-CA_ACTION="generateRootX509Cert"
 # CA_ACTION="generateClientX509Cert"
 
 # # Get client SSL certificate
