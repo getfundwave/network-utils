@@ -4,7 +4,6 @@ import md from 'node-forge';
 export const generateClientX509Cert = async (callerIdentity, secret, event) => {
 
   const pki = forge.pki;
-  const sslAttrs = event.sslAttrs;
 
   const arn = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Arn;
   const roleName = arn.match(/\/([^/]+)$/)?.[1];
@@ -28,7 +27,7 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
 
   // openssl genrsa -out key.pem 2048
   // openssl rsa -in key.pem -outform PEM -pubout -out public.pem
-  const clientPublicKey = pki.publicKeyFromPem(sslAttrs.clientPublicKeyPem);
+  const clientPublicKey = pki.publicKeyFromPem(event.certPubkey);
 
   // Create a client certificate signing request (CSR)
   const clientCertReq = pki.createCertificationRequest();
@@ -48,7 +47,7 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
 
   const startDate = new Date(); // Valid from the current date and time
   const endDate = new Date();
-  endDate.setDate(startDate.getDate() + sslAttrs.validityPeriod);
+  endDate.setDate(startDate.getDate() + event.certValidity);
   clientCert.validity.notBefore = startDate;
   clientCert.validity.notAfter = endDate;
 

@@ -16,14 +16,14 @@ export const handler = async (event) => {
   let res = {};
   switch(event.action) {
     case "getHostSSHCert":
-      const hostSSHCert = await signHostSSHCertificate(callerIdentity, secret, event.sshAttrs);
+      const hostSSHCert = await signHostSSHCertificate(callerIdentity, secret, event.certValidity, event.certPubkey);
       res = {
         statusCode: 200,
         body: JSON.stringify(hostSSHCert)
       }
       return res;
     case "getClientSSHCert":
-      const clientSSHCert = await signClientSSHCertificate(callerIdentity, secret, event.sshAttrs);
+      const clientSSHCert = await signClientSSHCertificate(callerIdentity, secret, event.certValidity, event.certPubkey);
       console.log(clientSSHCert)
       res = {
         statusCode: 200,

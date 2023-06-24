@@ -4,7 +4,7 @@ import util from 'util';
 
 const exec = util.promisify(child_process.exec);
 
-export const signHostSSHCertificate = async (callerIdentity, secret, sshAttrs) => {
+export const signHostSSHCertificate = async (callerIdentity, secret, certValidity, certPubkey) => {
 
   const arn = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Arn;
   const roleName = arn.match(/\/([^/]+)$/)?.[1];
@@ -15,13 +15,13 @@ export const signHostSSHCertificate = async (callerIdentity, secret, sshAttrs) =
   const certificatePath = "/tmp/" + publicKeyName + "-cert.pub";
   const host_ca = Buffer.from(secret.host_ca, 'base64').toString('utf-8');
   fs.writeFileSync(caKeyPath, host_ca);
-  fs.writeFileSync(publicKeyPath, sshAttrs['sshHostRSAKey']);
+  fs.writeFileSync(publicKeyPath, certPubkey);
 
   let { stdout, stderr } = await exec(`chmod 600 ${caKeyPath}`);
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 
-  ({ stdout, stderr } = await exec(`ssh-keygen -s ${caKeyPath} -I host_${roleName} -h -n ${roleName} -V +${sshAttrs['validity']} ${publicKeyPath}`));
+  ({ stdout, stderr } = await exec(`ssh-keygen -s ${caKeyPath} -I host_${roleName} -h -n ${roleName} -V +${certValidity}d ${publicKeyPath}`));
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 

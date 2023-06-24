@@ -1,27 +1,11 @@
 #!/bin/bash
 
-CA_LAMBDA_FUNCTION_NAME=${1:-"privateCA"}
-AWS_STS_REGION=${2:-"ap-south-1"}
-AWS_SECRETS_REGION=${3:-"ap-south-1"}
-
-# Edit values here
-######################################################
-# CA_ACTION="getHostSSHCert"
-# CA_ACTION="getClientSSHCert"
-# CA_ACTION="generateClientX509Cert"
-
-# # Get client SSL certificate
-# SSL_ATTRS_VALIDITY=""
-# SSL_CLIENT_PUBKEY_PEM=""
-
-# # Get host SSH certificate
-# SSH_ATTRS_VALIDITY=""
-# SSH_HOST_RSA_PUBKEY=""
-
-# # Get client SSH certificate
-# SSH_ATTRS_VALIDITY=""
-# SSH_CLIENT_RSA_PUBKEY=""
-######################################################
+CA_ACTION=${1}
+CERT_PUBKEY=${2}
+CERT_VALIDITY=${3:-"1"}
+AWS_STS_REGION=${4:-"ap-south-1"}
+AWS_SECRETS_REGION=${5:-"ap-south-1"}
+CA_LAMBDA_FUNCTION_NAME=${6:-"privateCA"}
 
 # Temporary Credentials
 TEMP_CREDS=$(aws sts get-session-token)
@@ -43,15 +27,8 @@ echo "{\"auth\": {
         \"authorizationHeader\": \"${auth_header}\", 
         \"sessionToken\": \"${SESSION_TOKEN}\"
     },
-    \"sslAttrs\": {
-        \"validityPeriod\": \"${SSL_ATTRS_VALIDITY}\",
-        \"clientPublicKeyPem\": \"${SSL_CLIENT_PUBKEY_PEM}\"
-    },
-    \"sshAttrs\": {
-        \"validity\": \"${SSH_ATTRS_VALIDITY}\",
-        \"sshHostRSAKey\": \"${SSH_HOST_RSA_PUBKEY}\",
-        \"sshClientRSAKey\": \"${SSH_CLIENT_RSA_PUBKEY}\"
-    },
+    \"certValidity\": \"${CERT_VALIDITY}\",
+    \"certPubkey\": \"${CERT_PUBKEY}\",
     \"action\": \"${CA_ACTION}\",
     \"awsSTSRegion\": \"${AWS_STS_REGION}\",
     \"awsSecretsRegion\": \"${AWS_SECRETS_REGION}\"
