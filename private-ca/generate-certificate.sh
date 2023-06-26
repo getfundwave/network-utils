@@ -24,7 +24,7 @@ output=$(python aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TO
 auth_header=$(echo $output | jq -r ".Authorization")
 date=$(echo $output | jq -r ".Date")
 
-echo "{\"auth\": {
+EVENT_JSON=$(echo "{\"auth\": {
         \"amzDate\": \"${date}\", 
         \"authorizationHeader\": \"${auth_header}\", 
         \"sessionToken\": \"${SESSION_TOKEN}\"
@@ -34,13 +34,13 @@ echo "{\"auth\": {
     \"action\": \"${CA_ACTION}\",
     \"awsSTSRegion\": \"${AWS_STS_REGION}\",
     \"awsSecretsRegion\": \"${AWS_SECRETS_REGION}\"
-    }" > event.json
+    }")
 
 
-aws lambda invoke --function-name ${CA_LAMBDA_FUNCTION_NAME} --cli-binary-format raw-in-base64-out --payload file://event.json response.json
+aws lambda invoke --function-name ${CA_LAMBDA_FUNCTION_NAME} --cli-binary-format raw-in-base64-out --payload "$EVENT_JSON" response.json
 response_body=$(cat response.json | jq -r ".body" | tr -d '"')
 echo ${response_body} > certificate
 
 # Clean up
 deactivate
-sudo rm -r env/ event.json response.json
+sudo rm -r env/ response.json
