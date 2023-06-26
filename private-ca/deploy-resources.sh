@@ -34,7 +34,7 @@ SECRET_ARN=$(aws secretsmanager create-secret \
     --region $AWS_REGION | jq ".ARN" | tr -d '"')
 
 # Clean up
-rm host_ca host_ca.pub user_ca user_ca.pub key.pem public.pem root.crt
+rm host_ca host_ca.pub user_ca user_ca.pub key.pem public.pem root.crt secret.json
 ############################################
 
 ################### Role ###################
