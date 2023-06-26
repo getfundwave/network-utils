@@ -5,6 +5,7 @@ ROLE_NAME=${2:-"privateCALambdaRole"}
 POLICY_NAME=${3:-"AccessPrivateCASecretsPolicy"}
 LAYER_NAME=${4:-"openssh"}
 FUNCTION_NAME=${5:-"privateCA"}
+AWS_REGION=${6:-"ap-south-1"}
 
 ################## Secret ##################
 
@@ -29,7 +30,8 @@ echo "{\"host_ca\": \"${HOST_CA_PRIVATE_KEY}\", \"host_ca.pub\": \"${HOST_CA_PUB
 # Create Secret
 SECRET_ARN=$(aws secretsmanager create-secret \
     --name $SECRET_NAME \
-    --secret-string file://secret.json | jq ".ARN" | tr -d '"')
+    --secret-string file://secret.json \
+    --region $AWS_REGION | jq ".ARN" | tr -d '"')
 
 
 ############################################
@@ -39,16 +41,17 @@ SECRET_ARN=$(aws secretsmanager create-secret \
 echo "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Sid\": \"AllowLambdaAssumeRole\",\"Effect\": \"Allow\",\"Principal\": {\"Service\": \"lambda.amazonaws.com\"},\"Action\": \"sts:AssumeRole\"}]}" | jq . > Trust-Policy.json
 
 ROLE_ARN=$(aws iam create-role \
-    --role-name  $ROLE_NAME\
+    --role-name  $ROLE_NAME \
+    --region $AWS_REGION \
     --assume-role-policy-document file://Trust-Policy.json | jq ".Role.Arn" | tr -d '"')
 
 # Create Policy for Lambda Role to Read and Update Secrets
 echo "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Sid\": \"VisualEditor0\",\"Effect\": \"Allow\",\"Action\": [\"secretsmanager:GetSecretValue\",\"secretsmanager:UpdateSecret\"],\"Resource\": \"${SECRET_ARN}\"}]}" | jq . > Policy.json
 
-POLICY_ARN=$(aws iam create-policy --policy-name $POLICY_NAME --policy-document file://Policy.json | jq ".Policy.Arn" | tr -d '"')
+POLICY_ARN=$(aws iam create-policy --policy-name $POLICY_NAME --region $AWS_REGION --policy-document file://Policy.json | jq ".Policy.Arn" | tr -d '"')
 
 # Attach policy to role
-aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn $POLICY_ARN
+aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn $POLICY_ARN --region $AWS_REGION
 
 ############################################
 
@@ -61,6 +64,7 @@ sudo zip -yr ./openssh-layer.zip . > /dev/null
 LAYER_ARN=$(aws lambda publish-layer-version \
     --layer-name $LAYER_NAME \
     --zip-file fileb://openssh-layer.zip \
+    --region $AWS_REGION \
     --query 'LayerVersionArn' \
     --output text)
 cd ..
@@ -79,6 +83,7 @@ cd ..
 aws lambda create-function \
   --function-name $FUNCTION_NAME \
   --runtime nodejs18.x \
+  --region $AWS_REGION \
   --handler index.handler \
   --zip-file fileb://lambda.zip \
   --layers $LAYER_ARN \
