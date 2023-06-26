@@ -96,5 +96,5 @@ aws lambda create-function \
   --role $ROLE_ARN
 
 # Clean up
-rm lambda.zip
+sudo rm -r lambda/node_modules/ lambda.zip 
 ###########################################

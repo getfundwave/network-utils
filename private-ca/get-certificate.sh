@@ -18,7 +18,7 @@ SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Credentials.SessionToken")
 python -m venv env && source env/bin/activate
 pip install boto3
 
-output=$(python aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_REGION)
+output=$(python aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_STS_REGION)
 auth_header=$(echo $output | jq -r ".Authorization")
 date=$(echo $output | jq -r ".Date")
 
@@ -43,4 +43,4 @@ echo ${response_body}
 
 # Clean up
 deactivate
-sudo rm -r env/ event.json response.json
+sudo rm -r env/ event.json
