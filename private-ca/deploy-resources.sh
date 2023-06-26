@@ -33,7 +33,8 @@ SECRET_ARN=$(aws secretsmanager create-secret \
     --secret-string file://secret.json \
     --region $AWS_REGION | jq ".ARN" | tr -d '"')
 
-
+# Clean up
+rm host_ca host_ca.pub user_ca user_ca.pub key.pem public.pem root.pem root.crt
 ############################################
 
 ################### Role ###################
@@ -53,6 +54,8 @@ POLICY_ARN=$(aws iam create-policy --policy-name $POLICY_NAME --region $AWS_REGI
 # Attach policy to role
 aws iam attach-role-policy --role-name $ROLE_NAME --policy-arn $POLICY_ARN --region $AWS_REGION
 
+# Clean up
+rm Trust-Policy.json Policy.json
 ############################################
 
 ################### Layer ##################
@@ -69,6 +72,8 @@ LAYER_ARN=$(aws lambda publish-layer-version \
     --output text)
 cd ..
 
+# Clean up
+sudo rm -r openssh-layer/ 
 ############################################
 
 ################## Lambda ##################
@@ -89,7 +94,6 @@ aws lambda create-function \
   --layers $LAYER_ARN \
   --role $ROLE_ARN
 
-###########################################
-
 # Clean up
-sudo rm -r openssh-layer/ host_ca user_ca *.pub *.pem *.json *.zip
+rm lambda.zip
+###########################################

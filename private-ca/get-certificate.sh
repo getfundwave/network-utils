@@ -43,4 +43,4 @@ echo ${response_body}
 
 # Clean up
 deactivate
-sudo rm -r env *.json
+sudo rm -r env/ event.json response.json
