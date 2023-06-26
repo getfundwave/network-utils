@@ -14,6 +14,7 @@ export const signClientSSHCertificate = async (callerIdentity, secret, certValid
   const publicKeyPath = "/tmp/" + publicKeyName + ".pub";
   const certificatePath = "/tmp/" + publicKeyName + "-cert.pub";
   const user_ca = Buffer.from(secret.user_ca, 'base64').toString('utf-8');
+  certPubkey = Buffer.from(certPubkey, 'base64').toString('utf-8');
   fs.writeFileSync(caKeyPath, user_ca);
   fs.writeFileSync(publicKeyPath, certPubkey);
   

@@ -1,11 +1,13 @@
 #!/bin/bash
 
 CA_ACTION=${1}
-CERT_PUBKEY=${2}
+CERT_PUBKEY_FILE=${2}
 CERT_VALIDITY=${3:-"1"}
 AWS_STS_REGION=${4:-"ap-south-1"}
 AWS_SECRETS_REGION=${5:-"ap-south-1"}
 CA_LAMBDA_FUNCTION_NAME=${6:-"privateCA"}
+
+CERT_PUBKEY=$(cat ${CERT_PUBKEY_FILE} | base64 -w 0)
 
 # Temporary Credentials
 TEMP_CREDS=$(aws sts get-session-token)
@@ -36,11 +38,9 @@ echo "{\"auth\": {
 
 
 aws lambda invoke --function-name ${CA_LAMBDA_FUNCTION_NAME} --cli-binary-format raw-in-base64-out --payload file://event.json response.json
-response_body=$(cat response.json | jq -r ".body" | tr -d '"' | sed 's/\\r\\n/ \
-/g')
-
-echo ${response_body}
+response_body=$(cat response.json | jq -r ".body" | tr -d '"')
+echo ${response_body} > certificate
 
 # Clean up
 deactivate
-sudo rm -r env/ event.json
+sudo rm -r env/ event.json response.json

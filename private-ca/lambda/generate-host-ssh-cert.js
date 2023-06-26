@@ -14,6 +14,7 @@ export const signHostSSHCertificate = async (callerIdentity, secret, certValidit
   const publicKeyPath = "/tmp/" + publicKeyName + ".pub";
   const certificatePath = "/tmp/" + publicKeyName + "-cert.pub";
   const host_ca = Buffer.from(secret.host_ca, 'base64').toString('utf-8');
+  certPubkey = Buffer.from(certPubkey, 'base64').toString('utf-8');
   fs.writeFileSync(caKeyPath, host_ca);
   fs.writeFileSync(publicKeyPath, certPubkey);
 

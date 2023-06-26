@@ -27,7 +27,7 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
 
   // openssl genrsa -out key.pem 2048
   // openssl rsa -in key.pem -outform PEM -pubout -out public.pem
-  const clientPublicKey = pki.publicKeyFromPem(event.certPubkey);
+  const clientPublicKey = pki.publicKeyFromPem(Buffer.from(event.certPubkey, 'base64').toString('utf-8'));
 
   // Create a client certificate signing request (CSR)
   const clientCertReq = pki.createCertificationRequest();
