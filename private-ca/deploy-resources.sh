@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SECRET_NAME=${1:-"privateCASecret"}
+SECRET_NAME=${1:-"privateCA"}
 ROLE_NAME=${2:-"privateCALambdaRole"}
 POLICY_NAME=${3:-"AccessPrivateCASecretsPolicy"}
 LAYER_NAME=${4:-"openssh"}
@@ -14,7 +14,7 @@ ssh-keygen -t rsa -b 4096 -f host_ca -C host_ca -N ""
 ssh-keygen -t rsa -b 4096 -f user_ca -C user_ca -N ""
 
 openssl genrsa -out key.pem 2048
-openssl rsa -in key.pem -outform PEM -pubout -out public.PEM
+openssl rsa -in key.pem -outform PEM -pubout -out public.pem
 openssl req -new -x509 -key key.pem -out root.crt -days 365 -subj "/C=US/ST=California/L=YourCity/O=Fundwave/OU=Fundwave/CN=FundwaveCA"
 
 HOST_CA_PRIVATE_KEY=$(cat host_ca | base64 -w 0)
@@ -23,7 +23,7 @@ USER_CA_PRIVATE_KEY=$(cat user_ca | base64 -w 0)
 USER_CA_PUBLIC_KEY=$(cat user_ca.pub | base64 -w 0)
 ROOT_SSL_PRIVATE_KEY=$(cat key.pem | base64 -w 0)
 ROOT_SSL_PUBLIC_KEY=$(cat public.pem | base64 -w 0)
-ROOT_SSL_CERT=$(cat root.pem | base64 -w 0)
+ROOT_SSL_CERT=$(cat root.crt | base64 -w 0)
 
 echo "{\"host_ca\": \"${HOST_CA_PRIVATE_KEY}\", \"host_ca.pub\": \"${HOST_CA_PUBLIC_KEY}\", \"user_ca\": \"${USER_CA_PRIVATE_KEY}\",\"user_ca.pub\": \"${USER_CA_PUBLIC_KEY}\",\"root_ssl_private_key\": \"${ROOT_SSL_PRIVATE_KEY}\",\"root_ssl_public_key\": \"${ROOT_SSL_PUBLIC_KEY}\", \"rootX509cert\": \"${ROOT_SSL_CERT}\"}" | jq . > secret.json
 
@@ -34,10 +34,11 @@ SECRET_ARN=$(aws secretsmanager create-secret \
     --region $AWS_REGION | jq ".ARN" | tr -d '"')
 
 # Clean up
-rm host_ca host_ca.pub user_ca user_ca.pub key.pem public.pem root.pem root.crt
+rm host_ca host_ca.pub user_ca user_ca.pub key.pem public.pem root.crt
 ############################################
 
 ################### Role ###################
+
 # Create role for lambda
 echo "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Sid\": \"AllowLambdaAssumeRole\",\"Effect\": \"Allow\",\"Principal\": {\"Service\": \"lambda.amazonaws.com\"},\"Action\": \"sts:AssumeRole\"}]}" | jq . > Trust-Policy.json
 
