@@ -15,13 +15,13 @@ export const signClientSSHCertificate = async (callerIdentity, secret, certValid
   const certificatePath = "/tmp/" + publicKeyName + "-cert.pub";
   const user_ca = Buffer.from(secret.user_ca, 'base64').toString('utf-8');
   fs.writeFileSync(caKeyPath, user_ca);
-  fs.writeFileSync(publicKeyPath, certValidity);
+  fs.writeFileSync(publicKeyPath, certPubkey);
   
   let { stdout, stderr } = await exec(`chmod 600 ${caKeyPath}`);
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 
-  ({ stdout, stderr } = await exec(`ssh-keygen -s ${caKeyPath} -I host_${roleName} -n ${roleName} -V +${certPubkey}d ${publicKeyPath}`));
+  ({ stdout, stderr } = await exec(`ssh-keygen -s ${caKeyPath} -I host_${roleName} -n ${roleName} -V +${certValidity}d ${publicKeyPath}`));
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 

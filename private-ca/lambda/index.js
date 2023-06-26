@@ -10,35 +10,29 @@ export const handler = async (event) => {
   const callerIdentity = await getCallerIdentity(event);
 
   // secret
-  const secret = await getSecret(event.awsSecretsRegion, 'privateCA');
+  const secret = await getSecret(event.awsSecretsRegion, 'private_CA_Secret');
   
   // action
-  let res = {};
   switch(event.action) {
     case "generateHostSSHCert":
       const hostSSHCert = await signHostSSHCertificate(callerIdentity, secret, event.certValidity, event.certPubkey);
-      res = {
+      return {
         statusCode: 200,
         body: JSON.stringify(hostSSHCert)
-      }
-      return res;
+      };
     case "generateClientSSHCert":
       const clientSSHCert = await signClientSSHCertificate(callerIdentity, secret, event.certValidity, event.certPubkey);
-      console.log(clientSSHCert)
-      res = {
+      return {
         statusCode: 200,
         body: JSON.stringify(clientSSHCert)
-      }
-      return res;
+      };
     case "generateClientX509Cert":
-      const res = await generateClientX509Cert(callerIdentity, secret, event);
-      return res;
+      return await generateClientX509Cert(callerIdentity, secret, event);
     default:
       console.log("Invalid Action")
-      res = {
+      return {
         statusCode: 400,
         body: JSON.stringify('Invalid Action')
       };
-      return res;
   } 
 };
