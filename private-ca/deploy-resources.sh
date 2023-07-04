@@ -2,7 +2,7 @@
 
 SECRET_NAME=${1:-"privateCA"}
 ROLE_NAME=${2:-"privateCALambdaRole"}
-POLICY_NAME=${3:-"AccessPrivateCASecretsPolicy"}
+POLICY_NAME=${3:-"PrivateCAPolicy"}
 LAYER_NAME=${4:-"openssh"}
 FUNCTION_NAME=${5:-"privateCA"}
 AWS_REGION=${6:-"ap-south-1"}
@@ -48,7 +48,7 @@ ROLE_ARN=$(aws iam create-role \
     --assume-role-policy-document file://Trust-Policy.json | jq ".Role.Arn" | tr -d '"')
 
 # Create Policy for Lambda Role to Read and Update Secrets
-echo "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Sid\": \"VisualEditor0\",\"Effect\": \"Allow\",\"Action\": [\"secretsmanager:GetSecretValue\",\"secretsmanager:UpdateSecret\"],\"Resource\": \"${SECRET_ARN}\"}]}" | jq . > Policy.json
+echo "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Sid\": \"VisualEditor0\",\"Effect\": \"Allow\",\"Action\": [\"secretsmanager:GetSecretValue\",\"secretsmanager:UpdateSecret\"],\"Resource\": \"${SECRET_ARN}\"}, {\"Action\": [\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\": \"Allow\",\"Resource\": \"arn:aws:logs:*:*:*\"}]}" | jq . > Policy.json
 
 POLICY_ARN=$(aws iam create-policy --policy-name $POLICY_NAME --region $AWS_REGION --policy-document file://Policy.json | jq ".Policy.Arn" | tr -d '"')
 
@@ -95,6 +95,18 @@ aws lambda create-function \
   --layers $LAYER_ARN \
   --role $ROLE_ARN
 
+aws lambda add-permission \
+    --function-name $FUNCTION_NAME \
+    --action lambda:InvokeFunctionUrl \
+    --principal "*" \
+    --function-url-auth-type "NONE" \
+    --statement-id url
+
+FUNCTION_URL=$(aws lambda create-function-url-config --function-name "privateCA" --auth-type "NONE" | jq -r ".FunctionUrl")
+
+echo "CA deployed at URL:"
+echo "${FUNCTION_URL}"
+
 # Clean up
-sudo rm -r lambda/node_modules/ lambda.zip 
+sudo rm -r lambda/node_modules/ lambda/package-lock.json lambda.zip 
 ###########################################

@@ -6,6 +6,8 @@ import { getSecret } from './secret-manager-utils.js';
   
 export const handler = async (event) => {
   
+  event=JSON.parse(event.body);
+  
   // auth
   const callerIdentity = await getCallerIdentity(event);
 
