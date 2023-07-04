@@ -18,13 +18,13 @@ export const handler = async (event) => {
       const hostSSHCert = await signHostSSHCertificate(callerIdentity, secret, event.certValidity, event.certPubkey);
       return {
         statusCode: 200,
-        body: JSON.stringify(hostSSHCert)
+        body: JSON.stringify(Buffer.from(hostSSHCert).toString('base64'))
       };
     case "generateClientSSHCert":
       const clientSSHCert = await signClientSSHCertificate(callerIdentity, secret, event.certValidity, event.certPubkey);
       return {
         statusCode: 200,
-        body: JSON.stringify(clientSSHCert)
+        body: JSON.stringify(Buffer.from(clientSSHCert).toString('base64'))
       };
     case "generateClientX509Cert":
       return await generateClientX509Cert(callerIdentity, secret, event);

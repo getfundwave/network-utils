@@ -63,6 +63,6 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
   const clientCertPem = pki.certificateToPem(clientCert);
   return {
     statusCode: 200,
-    body: clientCertPem
+    body: Buffer.from(clientCertPem).toString('base64')
   };
 }

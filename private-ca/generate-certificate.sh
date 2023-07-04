@@ -39,7 +39,7 @@ EVENT_JSON=$(echo "{\"auth\": {
 
 aws lambda invoke --function-name ${CA_LAMBDA_FUNCTION_NAME} --cli-binary-format raw-in-base64-out --payload "$EVENT_JSON" response.json
 response_body=$(cat response.json | jq -r ".body" | tr -d '"')
-echo ${response_body} > certificate
+echo ${response_body} | base64 -d > certificate
 
 # Clean up
 deactivate
