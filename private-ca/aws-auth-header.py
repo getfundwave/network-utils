@@ -17,8 +17,7 @@ if __name__ == "__main__":
         'Host': sts_host,
         'X-Amz-Date': datetime.now().strftime('%Y%m%dT%H%M%SZ')
     }
-    request = AWSRequest(method="POST", url="/", data=request_parameters,
-                         headers=request_headers)
+    request = AWSRequest(method="POST", url="/", data=request_parameters, headers=request_headers)
     boto_creds = Credentials(access_key_id, secret_access_key,token=session_token)
     auth = SigV4Auth(boto_creds, "sts", aws_region)
     auth.add_auth(request)

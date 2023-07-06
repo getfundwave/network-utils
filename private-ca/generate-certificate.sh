@@ -1,5 +1,20 @@
 #!/bin/bash
 
+while getopts ":h" option; do
+   case $option in
+      h)
+         echo "Usage: ./generate-certificate.sh [ACTION] [PUBLIC KEY FILE] [LAMBDA URL]"
+         echo "Possible actions:"
+         echo " generateHostSSHCert: Generates SSH Certificate for Host"
+         echo " generateClientSSHCert: Generates SSH Certificate for Client"
+         echo " generateClientX509Cert: Generates X.509 Certificate for Client"
+         exit;;
+     *)
+         echo "Error: Invalid option"
+         exit;;
+   esac
+done
+
 CA_ACTION=${1}
 CERT_PUBKEY_FILE=${2}
 CA_LAMBDA_URL=${3}
@@ -7,6 +22,20 @@ CERT_VALIDITY=${4:-"1"}
 AWS_STS_REGION=${5:-"ap-south-1"}
 AWS_SECRETS_REGION=${6:-"ap-south-1"}
 CA_LAMBDA_FUNCTION_NAME=${7:-"privateCA"}
+
+if [[ 
+        $CA_ACTION != "generateHostSSHCert" && 
+        $CA_ACTION != "generateClientSSHCert" && 
+        $CA_ACTION != "generateClientX509Cert" 
+    ]]
+then
+    echo "Invalid Action"
+    echo "Possible actions include:"
+    echo " generateHostSSHCert: Generates SSH Certificate for Host"
+    echo " generateClientSSHCert: Generates SSH Certificate for Client"
+    echo " generateClientX509Cert: Generates X.509 Certificate for Client"
+    exit;
+fi
 
 CERT_PUBKEY=$(cat ${CERT_PUBKEY_FILE} | base64 -w 0)
 
@@ -31,4 +60,4 @@ curl "${CA_LAMBDA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" | t
 
 # Clean up
 deactivate
-sudo rm -r env/
+rm -r env/
