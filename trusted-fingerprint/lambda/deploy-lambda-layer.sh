@@ -9,8 +9,6 @@ LAMBDA_FUNCTION_ZIP_FILE="lambda-function.zip"
 LAYER_ZIP_FILE="layer.zip"
 
 # Create a virtual environment and install dependencies
-mkdir -p python/lib/python3.8/site-packages
-
 # As Paramiko has system level dependencies, we must package them in the same environment that lambda uses.
 # Here we use the AWS Serverless Application Model (SAM) image to emulate the python3.8 AWS Lambda runtime.
 # https://gallery.ecr.aws/sam/build-python3.8
@@ -40,5 +38,5 @@ aws lambda create-function \
 
 # Clean up
 sudo rm -r env python
-sudo rm *.zip
+rm lambda-function.zip layer.zip
 docker rmi -f public.ecr.aws/sam/build-python3.8

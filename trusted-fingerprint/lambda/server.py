@@ -22,5 +22,5 @@ def lambda_handler(event, context):
     except:
         return {
             'statusCode': 500,
-            'keyBody': None
+            'body': 'Internal Server Error'
         }

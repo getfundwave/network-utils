@@ -4,9 +4,9 @@ HOST=$1
 USER_KEY=$2
 VERIFY_SSH_LAMBDA_URL=${3:-$VERIFY_SSH_LAMBDA_URL}
 VERIFY_SSH_LAMBDA_API_KEY=${4:-$VERIFY_SSH_LAMBDA_API_KEY}
+KNOWN_HOSTS=${5:-"/home/$USER/.ssh/known_hosts"}
 
 USER_KEY_TYPE=$(echo $USER_KEY | cut -d " " -f 1)
-KNOWN_HOSTS="/home/$USER/.ssh/known_hosts"
 
 if [[ $USER_KEY_TYPE == "ssh-ed25519" ]]; then
     host_key=$(ssh-keyscan -t ed25519 $HOST | awk '{print $3}')

@@ -8,7 +8,6 @@ ZIP_FILE="layer.zip"
 # Create a virtual environment and install dependencies
 python3.8 -m venv env
 source env/bin/activate
-mkdir -p python/lib/python3.8/site-packages
 
 docker run -v "$PWD":/var/task "public.ecr.aws/sam/build-python3.8" /bin/sh -c "pip install --platform manylinux2010_x86_64 --implementation cp --python 3.8 --only-binary=:all: --upgrade -r requirements.txt -t python/lib/python3.8/site-packages; exit"
 
