@@ -4,7 +4,7 @@ import util from 'util';
 
 const exec = util.promisify(child_process.exec);
 
-export const signClientSSHCertificate = async (callerIdentity, secret, certValidity, certPubkey) => {
+export const signClientSSHCertificate = async (callerIdentity, secret, certPubkey) => {
 
   const arn = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Arn;
   const roleName = arn.match(/\/([^/]+)$/)?.[1];
@@ -22,7 +22,7 @@ export const signClientSSHCertificate = async (callerIdentity, secret, certValid
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 
-  ({ stdout, stderr } = await exec(`ssh-keygen -s ${caKeyPath} -I client_${roleName} -n ${roleName} -V +${certValidity}d ${publicKeyPath}`));
+  ({ stdout, stderr } = await exec(`ssh-keygen -s ${caKeyPath} -I client_${roleName} -n ${roleName} -V +1d ${publicKeyPath}`));
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 

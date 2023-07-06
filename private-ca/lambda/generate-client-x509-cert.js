@@ -47,7 +47,7 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
 
   const startDate = new Date(); // Valid from the current date and time
   const endDate = new Date();
-  endDate.setDate(startDate.getDate() + event.certValidity);
+  endDate.setDate(startDate.getDate() + 1);
   clientCert.validity.notBefore = startDate;
   clientCert.validity.notAfter = endDate;
 
