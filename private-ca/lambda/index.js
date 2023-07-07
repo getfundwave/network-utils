@@ -12,7 +12,7 @@ export const handler = async (event) => {
   const callerIdentity = await getCallerIdentity(event);
 
   // secret
-  const secret = await getSecret(event.awsSecretsRegion, 'private_CA_Secret');
+  const secret = await getSecret(event.awsSecretsRegion, 'privateCA');
   
   // action
   switch(event.action) {

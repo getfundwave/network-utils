@@ -108,5 +108,5 @@ echo "CA deployed at URL:"
 echo "${FUNCTION_URL}"
 
 # Clean up
-sudo rm -r lambda/node_modules/ lambda/package-lock.json lambda.zip 
+rm -r lambda/node_modules/ lambda/package-lock.json lambda.zip 
 ###########################################
