@@ -29,5 +29,5 @@ aws lambda update-function-configuration \
   --layers $LAYER_ARN
 
 # Clean up
-sudo rm -r env python
+rm -r env python
 rm $ZIP_FILE

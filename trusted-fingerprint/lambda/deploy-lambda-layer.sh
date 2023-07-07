@@ -37,6 +37,6 @@ aws lambda create-function \
   --role $VERIFY_SSH_LAMBDA_ROLE_ARN
 
 # Clean up
-sudo rm -r env python
+rm -r env python
 rm lambda-function.zip layer.zip
 docker rmi -f public.ecr.aws/sam/build-python3.8
