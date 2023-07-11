@@ -5,8 +5,10 @@ CA_LAMBDA_URL=${2}
 USER_SSH_DIR=${3:-"/home/$USER/.ssh"}
 SYSTEM_SSH_DIR=${4:-"/etc/ssh"}
 SYSTEM_SSL_DIR=${5:-"/etc/ssl"}
-AWS_STS_REGION=${6:-"ap-south-1"}
-AWS_SECRETS_REGION=${7:-"ap-south-1"}
+AWS_STS_REGION=${6:-"ap-southeast-1"}
+AWS_SCRTS_REGION=${7:-"ap-southeast-1"}
+AWS_PROFILE=${8:-"default"}
+
 PYTHON_EXEC=$(which python || which python3)
 
 # Check for options
@@ -96,7 +98,7 @@ else
 fi
 
 # Temporary Credentials
-TEMP_CREDS=$(aws sts get-session-token)
+TEMP_CREDS=$(aws sts get-session-token --region $AWS_STS_REGION --profile $AWS_PROFILE)
 
 ACCESS_KEY_ID=$(echo $TEMP_CREDS | jq -r ".Credentials.AccessKeyId")
 SECRET_ACCESS_KEY=$(echo $TEMP_CREDS | jq -r ".Credentials.SecretAccessKey")
@@ -110,7 +112,7 @@ output=$(python aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TO
 auth_header=$(echo $output | jq -r ".Authorization")
 date=$(echo $output | jq -r ".Date")
 
-EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"${auth_header}\",\"sessionToken\":\"${SESSION_TOKEN}\"},\"certPubkey\":\"${CERT_PUBKEY}\",\"action\":\"${CA_ACTION}\",\"awsSTSRegion\":\"${AWS_STS_REGION}\",\"awsSecretsRegion\":\"${AWS_SECRETS_REGION}\"}")
+EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"${auth_header}\",\"sessionToken\":\"${SESSION_TOKEN}\"},\"certPubkey\":\"${CERT_PUBKEY}\",\"action\":\"${CA_ACTION}\",\"awsSTSRegion\":\"${AWS_STS_REGION}\"}")
 
 ENCODED_CERTIFICATE=$(curl "${CA_LAMBDA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" | tr -d '"')
 CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)

@@ -35,5 +35,4 @@ You can pass the following params to modify the payload:
   - generateClientX509Cert
 - `CERT_PUBKEY` - Public Key of the client to be signed for generating the certificate
 - `AWS_STS_REGION` - AWS region for generating sts token
-- `AWS_SECRETS_REGION` - AWS region of the secret
 - `CA_LAMBDA_FUNCTION_NAME` - Name of the CA lambda function
