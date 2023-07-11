@@ -7,7 +7,8 @@ SYSTEM_SSH_DIR=${4:-"/etc/ssh"}
 SYSTEM_SSL_DIR=${5:-"/etc/ssl"}
 AWS_STS_REGION=${6:-"ap-south-1"}
 AWS_SECRETS_REGION=${7:-"ap-south-1"}
-CA_LAMBDA_FUNCTION_NAME=${8:-"privateCA"}
+AWS_LAMBDA_REGION=${8:-"ap-south-1"}
+CA_LAMBDA_FUNCTION_NAME=${9:-"privateCA"}
 
 # Check for options
 while getopts ":h" option; do
@@ -44,14 +45,14 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
         fi
     fi
     test -f ${USER_SSH_DIR}/id_rsa.pub || ssh-keygen -t rsa -b 4096 -f ${USER_SSH_DIR}/id_rsa -C host_ca -N ""
-    CERT_PUBKEY=$(cat ${USER_SSH_DIR}/id_rsa.pub | base64 -w 0)
+    CERT_PUBKEY=$(cat ${USER_SSH_DIR}/id_rsa.pub | base64 | tr -d \\n)
 
 elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
     if test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub; then
         # Host SSH Certificate already exists
         current_timestamp=$(date +%s) 
         certificate_expiration_timestamp=$(ssh-keygen -Lf ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub | awk '/Valid:/{print $NF}')
-        certificate_expiration_timestamp_seconds=$(date -d "$certificate_expiration_timestamp" +%s)
+        certificate_expiration_timestamp_seconds=$(echo "$certificate_expiration_timestamp" | awk -F: '{ print ($1 * 3600) + ($2 * 60) + $3 }')
 
         if (( certificate_expiration_timestamp_seconds > current_timestamp + 300)); then
             # Certificate is valid for atleast 300 seconds (5 minutes)
@@ -64,7 +65,7 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         fi
     fi
     test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub || ssh-keygen -t rsa -b 4096 -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key -C host_ca -N ""
-    CERT_PUBKEY=$(cat ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub | base64 -w 0)
+    CERT_PUBKEY=$(cat ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub | base64 | tr -d \\n)
 
 elif [[ $CA_ACTION = "generateClientX509Cert" ]]; then
     test -d ${SYSTEM_SSL_DIR}/privateCA || sudo mkdir -p ${SYSTEM_SSL_DIR}/privateCA
@@ -85,7 +86,7 @@ elif [[ $CA_ACTION = "generateClientX509Cert" ]]; then
         sudo openssl genrsa -out ${SYSTEM_SSL_DIR}/privateCA/key.pem 2048
         sudo openssl rsa -in ${SYSTEM_SSL_DIR}/privateCA/key.pem -outform PEM -pubout -out ${SYSTEM_SSL_DIR}/privateCA/public.pem
     fi
-    CERT_PUBKEY=$(cat ${SYSTEM_SSL_DIR}/privateCA/public.pem | base64 -w 0)
+    CERT_PUBKEY=$(cat ${SYSTEM_SSL_DIR}/privateCA/public.pem | base64 | tr -d \\n)
 else
     echo "Invalid Action"
     echo "Possible actions include:"
@@ -104,7 +105,7 @@ SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Credentials.SessionToken")
 
 # Auth Headers
 python -m venv env && source env/bin/activate
-pip install boto3
+pip install boto3 awscurl
 
 output=$(python aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_STS_REGION)
 auth_header=$(echo $output | jq -r ".Authorization")
@@ -112,7 +113,16 @@ date=$(echo $output | jq -r ".Date")
 
 EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"${auth_header}\",\"sessionToken\":\"${SESSION_TOKEN}\"},\"certPubkey\":\"${CERT_PUBKEY}\",\"action\":\"${CA_ACTION}\",\"awsSTSRegion\":\"${AWS_STS_REGION}\",\"awsSecretsRegion\":\"${AWS_SECRETS_REGION}\"}")
 
-ENCODED_CERTIFICATE=$(curl "${CA_LAMBDA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" | tr -d '"')
+ENCODED_CERTIFICATE=$(
+    awscurl -X POST "${CA_LAMBDA_URL}" \
+    -H 'Content-Type: application/json' \
+    -d "${EVENT_JSON}" \
+    --region "${AWS_LAMBDA_REGION}" \
+    --service 'lambda'
+    --access_key "${ACCESS_KEY_ID}" \
+    --secret_key "${SECRET_ACCESS_KEY}" \
+    --security_token "${SESSION_TOKEN}" \
+    )
 CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)
 
 

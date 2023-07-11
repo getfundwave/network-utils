@@ -99,7 +99,7 @@ aws lambda add-permission \
     --function-name $FUNCTION_NAME \
     --action lambda:InvokeFunctionUrl \
     --principal "*" \
-    --function-url-auth-type "NONE" \
+    --function-url-auth-type "AWS_IAM" \
     --statement-id url
 
 FUNCTION_URL=$(aws lambda create-function-url-config --function-name "privateCA" --auth-type "NONE" | jq -r ".FunctionUrl")
