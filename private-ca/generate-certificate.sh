@@ -7,8 +7,7 @@ SYSTEM_SSH_DIR=${4:-"/etc/ssh"}
 SYSTEM_SSL_DIR=${5:-"/etc/ssl"}
 AWS_STS_REGION=${6:-"ap-south-1"}
 AWS_SECRETS_REGION=${7:-"ap-south-1"}
-AWS_LAMBDA_REGION=${8:-"ap-south-1"}
-CA_LAMBDA_FUNCTION_NAME=${9:-"privateCA"}
+CA_LAMBDA_FUNCTION_NAME=${8:-"privateCA"}
 
 # Check for options
 while getopts ":h" option; do
@@ -105,7 +104,7 @@ SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Credentials.SessionToken")
 
 # Auth Headers
 python -m venv env && source env/bin/activate
-pip install boto3 awscurl
+pip install boto3
 
 output=$(python aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_STS_REGION)
 auth_header=$(echo $output | jq -r ".Authorization")
@@ -113,16 +112,7 @@ date=$(echo $output | jq -r ".Date")
 
 EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"${auth_header}\",\"sessionToken\":\"${SESSION_TOKEN}\"},\"certPubkey\":\"${CERT_PUBKEY}\",\"action\":\"${CA_ACTION}\",\"awsSTSRegion\":\"${AWS_STS_REGION}\",\"awsSecretsRegion\":\"${AWS_SECRETS_REGION}\"}")
 
-ENCODED_CERTIFICATE=$(
-    awscurl -X POST "${CA_LAMBDA_URL}" \
-    -H 'Content-Type: application/json' \
-    -d "${EVENT_JSON}" \
-    --region "${AWS_LAMBDA_REGION}" \
-    --service 'lambda'
-    --access_key "${ACCESS_KEY_ID}" \
-    --secret_key "${SECRET_ACCESS_KEY}" \
-    --security_token "${SESSION_TOKEN}" \
-    )
+ENCODED_CERTIFICATE=$(curl "${CA_LAMBDA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" | tr -d '"')
 CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)
 
 
