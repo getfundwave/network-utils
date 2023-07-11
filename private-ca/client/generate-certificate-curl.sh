@@ -7,7 +7,7 @@ SYSTEM_SSH_DIR=${4:-"/etc/ssh"}
 SYSTEM_SSL_DIR=${5:-"/etc/ssl"}
 AWS_STS_REGION=${6:-"ap-south-1"}
 AWS_SECRETS_REGION=${7:-"ap-south-1"}
-CA_LAMBDA_FUNCTION_NAME=${8:-"privateCA"}
+PYTHON_EXEC=$(which python || which python3)
 
 # Check for options
 while getopts ":h" option; do
@@ -103,7 +103,7 @@ SECRET_ACCESS_KEY=$(echo $TEMP_CREDS | jq -r ".Credentials.SecretAccessKey")
 SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Credentials.SessionToken")
 
 # Auth Headers
-python -m venv env && source env/bin/activate
+$PYTHON_EXEC -m venv env && source env/bin/activate
 pip install boto3
 
 output=$(python aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_STS_REGION)

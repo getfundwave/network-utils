@@ -1,0 +1,3 @@
+threshold: medium
+scopeconfig:
+  - scope: node

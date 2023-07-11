@@ -48,7 +48,7 @@ ROLE_ARN=$(aws iam create-role \
     --assume-role-policy-document file://Trust-Policy.json | jq ".Role.Arn" | tr -d '"')
 
 # Create Policy for Lambda Role to Read and Update Secrets
-echo "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Sid\": \"VisualEditor0\",\"Effect\": \"Allow\",\"Action\": [\"secretsmanager:GetSecretValue\",\"secretsmanager:UpdateSecret\"],\"Resource\": \"${SECRET_ARN}\"}, {\"Action\": [\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\": \"Allow\",\"Resource\": \"arn:aws:logs:*:*:*\"}]}" | jq . > Policy.json
+echo "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Sid\": \"VisualEditor0\",\"Effect\": \"Allow\",\"Action\": [\"secretsmanager:GetSecretValue\"],\"Resource\": \"${SECRET_ARN}\"}, {\"Action\": [\"logs:CreateLogGroup\",\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\": \"Allow\",\"Resource\": \"arn:aws:logs:*:*:*\"}]}" | jq . > Policy.json
 
 POLICY_ARN=$(aws iam create-policy --policy-name $POLICY_NAME --region $AWS_REGION --policy-document file://Policy.json | jq ".Policy.Arn" | tr -d '"')
 
@@ -90,7 +90,7 @@ aws lambda create-function \
   --function-name $FUNCTION_NAME \
   --runtime nodejs18.x \
   --region $AWS_REGION \
-  --handler index.handler \
+  --handler index_lambda.handler \
   --zip-file fileb://lambda.zip \
   --layers $LAYER_ARN \
   --role $ROLE_ARN

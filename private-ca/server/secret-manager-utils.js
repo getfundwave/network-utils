@@ -7,6 +7,7 @@ export const getSecret = async (secretRegion, secretId) => {
   return secret;
 };
 
+/**
 export const updateSecret = async (secretRegion, secretId, key, value) => {
   var secretsmanager = new aws.SecretsManager({ region: secretRegion });
   let secret = await getSecret(secretId);
@@ -18,3 +19,4 @@ export const updateSecret = async (secretRegion, secretId, key, value) => {
   const updateRes = await secretsmanager.updateSecret(params).promise();
   return updateRes;
 }
+**/

@@ -1,3 +1,1 @@
-private-ca/lambda/node_modules/
-private-ca/lambda/package-lock.json
-.talismanrc
+**/node_modules/**
