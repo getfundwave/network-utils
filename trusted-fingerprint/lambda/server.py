@@ -1,10 +1,28 @@
 import paramiko
+import json
+import os
 
 def lambda_handler(event, context):
-    
     try:
-        host = event['url']
-        key_type = event['keyType']
+        event_body = json.loads(event['body'])
+        
+        if 'Authorization' not in event_body:
+            return {
+                'statusCode': 403,
+                'body': 'Forbidden'
+            }
+        
+        auth = event_body['Authorization'].split()
+        host = event_body['Host']
+        key_type = event_body['KeyType']
+        
+        secret_token = os.environ['SECRET_TOKEN']
+        
+        if len(auth) != 2 or auth[0] != "Bearer" or auth[1] != secret_token:
+            return {
+                'statusCode': 403,
+                'body': 'Forbidden'
+            }
         
         transport = paramiko.Transport(host)
         transport.get_security_options().key_types = [key_type]
@@ -17,10 +35,10 @@ def lambda_handler(event, context):
 
         return {
             'statusCode': 200,
-            'keyBody': key_body
+            'body': key_body
         }
     except:
         return {
             'statusCode': 500,
-            'body': 'Internal Server Error'
+            'body': 'Internal Server Error '
         }
