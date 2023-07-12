@@ -3,7 +3,7 @@
 HOST=$1
 USER_KEY=$2
 VERIFY_SSH_LAMBDA_URL=${3:-$VERIFY_SSH_LAMBDA_URL}
-VERIFY_SSH_LAMBDA_API_KEY=${4:-$VERIFY_SSH_LAMBDA_API_KEY}
+VERIFY_SSH_LAMBDA_TOKEN=${4:-$VERIFY_SSH_LAMBDA_TOKEN}
 KNOWN_HOSTS=${5:-"/home/$USER/.ssh/known_hosts"}
 
 USER_KEY_TYPE=$(echo $USER_KEY | cut -d " " -f 1)
@@ -25,23 +25,33 @@ fi
 hashed_hostname=$(echo -n "$HOST" | sha256sum | cut -d " " -f 1 | awk '{ print $1 }')
 
 # Check if the hostname (hashed or unhashed) exists in known hosts
-if [[ $(grep -q "$HOST" "$KNOWN_HOSTS"; echo $?) -eq 0 || $(grep -q "$hashed_hostname" "$KNOWN_HOSTS"; echo $?) -eq 0 ]]; then
+if [[ $(grep -q "$HOST $USER_KEY_TYPE" "$KNOWN_HOSTS"; echo $?) -eq 0 || 
+        $(grep -q "$hashed_hostname $USER_KEY_TYPE" "$KNOWN_HOSTS"; echo $?) -eq 0 
+    ]]; then
     echo "Key found in known_hosts."
     exit 0
 else
     echo "Key not found in known_hosts."
     echo "Attempting key verification..."
 
-    lambda_response=$(curl --location --request GET "$VERIFY_SSH_LAMBDA_URL?url=$HOST&keyType=$USER_KEY_TYPE" --header "x-api-key: $VERIFY_SSH_LAMBDA_API_KEY"| awk '{print}')
-    lambda_response_status=$(echo $lambda_response | cut -d " " -f 2 | cut -d '"' -f 2 | cut -d '}' -f 1| cut -d ',' -f 1)
-    lambda_response_key=$(echo $lambda_response | cut -d " " -f 4 | cut -d '"' -f 2 | cut -d '}' -f 1)
-
-    echo $lambda_response_status
+    lambda_response_status=$(curl -sw '%{http_code}' \
+    -o key.txt \
+    -X 'POST' \
+    -H 'Content-Type: application/json' \
+    -d '{
+            "Host": '"\"${HOST}\""', 
+            "KeyType": '"\"${USER_KEY_TYPE}\""', 
+            "Authorization": '"\"Bearer ${VERIFY_SSH_LAMBDA_TOKEN}\""'
+        }' \
+    $VERIFY_SSH_LAMBDA_URL)
 
     if [[ $lambda_response_status != "200" ]]; then
         echo "Encountered server error"
         exit 1
     fi
+
+    lambda_response_key=$(cat key.txt)
+    rm key.txt
 
     if [[ 
         $host_key == $lambda_response_key

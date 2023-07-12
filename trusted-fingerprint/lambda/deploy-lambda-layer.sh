@@ -4,6 +4,8 @@
 FUNCTION_NAME=${1:-"VerifySSHKey"}
 LAYER_NAME=${2:-"paramiko-layer"}
 VERIFY_SSH_LAMBDA_ROLE_ARN=${3:-$VERIFY_SSH_LAMBDA_ROLE_ARN}
+AWS_REGION=${4:-"ap-south-1"}
+AWS_PROFILE=${5:-"default"}
 
 LAMBDA_FUNCTION_ZIP_FILE="lambda-function.zip"
 LAYER_ZIP_FILE="layer.zip"
@@ -25,6 +27,8 @@ LAYER_ARN=$(aws lambda publish-layer-version \
   --compatible-runtimes python3.8 \
   --zip-file fileb://$LAYER_ZIP_FILE \
   --query 'LayerVersionArn' \
+  --region "${AWS_REGION}" \
+  --profile "${AWS_PROFILE}" \
   --output text)
 
 # Create the Lambda function
@@ -34,7 +38,9 @@ aws lambda create-function \
   --handler server.lambda_handler \
   --zip-file fileb://$LAMBDA_FUNCTION_ZIP_FILE \
   --layers $LAYER_ARN \
-  --role $VERIFY_SSH_LAMBDA_ROLE_ARN
+  --role $VERIFY_SSH_LAMBDA_ROLE_ARN \
+  --region "${AWS_REGION}" \
+  --profile "${AWS_PROFILE}"
 
 # Clean up
 rm -r env python

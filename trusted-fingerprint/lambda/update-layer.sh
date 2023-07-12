@@ -3,6 +3,8 @@
 # Variables
 LAYER_NAME=${1:-"paramiko-layer"}
 FUNCTION_NAME=${2:-"VerifySSHKey"}
+AWS_REGION=${3:-"ap-south-1"}
+AWS_PROFILE=${4:-"default"}
 ZIP_FILE="layer.zip"
 
 # Create a virtual environment and install dependencies
@@ -21,12 +23,16 @@ LAYER_ARN=$(aws lambda publish-layer-version \
   --compatible-runtimes python3.8 \
   --zip-file fileb://$ZIP_FILE \
   --query 'LayerVersionArn' \
-  --output text)
+  --output text\
+  --region "${AWS_REGION}" \
+  --profile "${AWS_PROFILE}")
 
 # Update the Lambda function(s) that use the layer
 aws lambda update-function-configuration \
   --function-name $FUNCTION_NAME \
-  --layers $LAYER_ARN
+  --layers $LAYER_ARN \
+  --region "${AWS_REGION}" \
+  --profile "${AWS_PROFILE}"
 
 # Clean up
 rm -r env python
