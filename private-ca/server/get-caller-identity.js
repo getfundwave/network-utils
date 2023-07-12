@@ -14,9 +14,10 @@ export const getCallerIdentity = (event) => {
       'Content-Type': 'application/x-www-form-urlencoded',
       'X-Amz-Date': auth.amzDate,
       'Authorization': auth.authorizationHeader,
-      'X-Amz-Security-Token': auth.sessionToken
+      'X-Amz-Security-Token': auth.sessionToken,
+      'Aud': 'FundwaveCA'
     };
-    
+
     const options = {
       hostname: host,
       path: path,

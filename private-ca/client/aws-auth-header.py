@@ -15,7 +15,8 @@ if __name__ == "__main__":
     request_parameters = 'Action=GetCallerIdentity&Version=2011-06-15'
     request_headers = {
         'Host': sts_host,
-        'X-Amz-Date': datetime.now().strftime('%Y%m%dT%H%M%SZ')
+        'X-Amz-Date': datetime.now().strftime('%Y%m%dT%H%M%SZ'),
+        'Aud': 'FundwaveCA'
     }
     request = AWSRequest(method="POST", url="/", data=request_parameters, headers=request_headers)
     boto_creds = Credentials(access_key_id, secret_access_key,token=session_token)

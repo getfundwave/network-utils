@@ -84,7 +84,7 @@ sudo rm -r openssh-layer/
 ################## Lambda ##################
 
 # Create lambda function
-cd lambda
+cd server
 npm i
 zip -r ./lambda.zip .
 mv lambda.zip ../
@@ -115,5 +115,5 @@ echo "CA deployed at URL:"
 echo "${FUNCTION_URL}"
 
 # Clean up
-rm -r lambda/node_modules/ lambda/package-lock.json lambda.zip 
+rm -r server/node_modules/ server/package-lock.json lambda.zip 
 ###########################################
