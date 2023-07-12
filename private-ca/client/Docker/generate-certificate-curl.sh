@@ -6,8 +6,7 @@ USER_SSH_DIR=${3:-"/home/$USER/.ssh"}
 SYSTEM_SSH_DIR=${4:-"/etc/ssh"}
 SYSTEM_SSL_DIR=${5:-"/etc/ssl"}
 AWS_STS_REGION=${6:-"ap-southeast-1"}
-AWS_SCRTS_REGION=${7:-"ap-southeast-1"}
-AWS_PROFILE=${8:-"default"}
+AWS_PROFILE=${7:-"default"}
 
 PYTHON_EXEC=$(which python || which python3)
 
