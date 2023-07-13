@@ -1,7 +1,7 @@
 #!/bin/bash
 
-CA_ACTION=${1:-$CA_ACTION}
-CA_LAMBDA_URL=${2:-$CA_LAMBDA_URL}
+CA_ACTION=${1}
+CA_LAMBDA_URL=${2}
 USER_SSH_DIR=${3:-"/home/$USER/.ssh"}
 SYSTEM_SSH_DIR=${4:-"/etc/ssh"}
 SYSTEM_SSL_DIR=${5:-"/etc/ssl"}
@@ -52,8 +52,8 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         current_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S") 
         certificate_expiration_timestamp=$(ssh-keygen -Lf ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub | awk '/Valid:/{print $NF}')
 
-        if [[ $certificate_expiration_timestamp > $current_timestamp ]]; then
-            # Certificate is valid 
+        if [[ $certificate_expiration_timestamp_seconds > $current_timestamp ]]; then
+            # Certificate is valid
             echo "A valid certificate was found at ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub."
             echo "Aborting..."
             exit;
@@ -62,27 +62,27 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
             rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
         fi
     fi
-    test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub || ssh-keygen -t rsa -b 4096 -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key -C host_ca -N ""
+    test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub || sudo ssh-keygen -t rsa -b 4096 -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key -C host_ca -N ""
     CERT_PUBKEY=$(cat ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub | base64 | tr -d \\n)
 
 elif [[ $CA_ACTION = "generateClientX509Cert" ]]; then
-    test -d ${SYSTEM_SSL_DIR}/privateCA || mkdir -p ${SYSTEM_SSL_DIR}/privateCA
+    test -d ${SYSTEM_SSL_DIR}/privateCA || sudo mkdir -p ${SYSTEM_SSL_DIR}/privateCA
     if test -f ${SYSTEM_SSL_DIR}/privateCA/public.crt; then
         # X.509 Certificate already exists
 
-        if ( openssl x509 -checkend 300 -noout -in ${SYSTEM_SSL_DIR}/privateCA/public.crt ); then
+        if ( sudo openssl x509 -checkend 300 -noout -in ${SYSTEM_SSL_DIR}/privateCA/public.crt ); then
             # Certificate is valid for atleast 300 seconds (5 minutes)
             echo "A valid certificate was found at ${SYSTEM_SSL_DIR}/privateCA/public.crt."
             echo "Aborting..."
             exit;
         else
             # Certificate expired or about to expire
-            rm ${SYSTEM_SSL_DIR}/privateCA/public.crt
+            sudo rm ${SYSTEM_SSL_DIR}/privateCA/public.crt
         fi
     fi
     if ! test -f ${SYSTEM_SSL_DIR}/privateCA/public.pem; then
-        openssl genrsa -out ${SYSTEM_SSL_DIR}/privateCA/key.pem 2048
-        openssl rsa -in ${SYSTEM_SSL_DIR}/privateCA/key.pem -outform PEM -pubout -out ${SYSTEM_SSL_DIR}/privateCA/public.pem
+        sudo openssl genrsa -out ${SYSTEM_SSL_DIR}/privateCA/key.pem 2048
+        sudo openssl rsa -in ${SYSTEM_SSL_DIR}/privateCA/key.pem -outform PEM -pubout -out ${SYSTEM_SSL_DIR}/privateCA/public.pem
     fi
     CERT_PUBKEY=$(cat ${SYSTEM_SSL_DIR}/privateCA/public.pem | base64 | tr -d \\n)
 else
@@ -95,19 +95,22 @@ else
 fi
 
 # Temporary Credentials
-INSTANCE_ROLE_NAME=$(curl http://169.254.169.254/latest/meta-data/iam/security-credentials/)
-TEMP_CREDS=$(curl http://169.254.169.254/latest/meta-data/iam/security-credentials/$INSTANCE_ROLE_NAME)
+TEMP_CREDS=$(aws sts get-session-token --region $AWS_STS_REGION --profile $AWS_PROFILE)
 
-ACCESS_KEY_ID=$(echo $TEMP_CREDS | jq -r ".AccessKeyId")
-SECRET_ACCESS_KEY=$(echo $TEMP_CREDS | jq -r ".SecretAccessKey")
-SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Token")
+ACCESS_KEY_ID=$(echo $TEMP_CREDS | jq -r ".Credentials.AccessKeyId")
+SECRET_ACCESS_KEY=$(echo $TEMP_CREDS | jq -r ".Credentials.SecretAccessKey")
+SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Credentials.SessionToken")
 
 # Auth Headers
+$PYTHON_EXEC -m venv env && source env/bin/activate
+pip install boto3
+
 output=$($PYTHON_EXEC aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_STS_REGION)
 auth_header=$(echo $output | jq -r ".Authorization")
 date=$(echo $output | jq -r ".Date")
 
 EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"${auth_header}\",\"sessionToken\":\"${SESSION_TOKEN}\"},\"certPubkey\":\"${CERT_PUBKEY}\",\"action\":\"${CA_ACTION}\",\"awsSTSRegion\":\"${AWS_STS_REGION}\"}")
+
 
 if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
     LAMBDA_RESPONSE=$(curl "${CA_LAMBDA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON")
@@ -128,7 +131,7 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
     CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)    
     USER_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"user_ca.pub\"" | base64 -d)
 
-    sh -c "echo $CERTIFICATE > ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
+    sudo sh -c "echo $CERTIFICATE > ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
     echo "Certificate written to ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
 
     test -f ${SYSTEM_SSH_DIR}/user_ca.pub || echo $USER_CA_PUBKEY > ${SYSTEM_SSH_DIR}/user_ca.pub
@@ -143,6 +146,10 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
 elif [[ $CA_ACTION = "generateClientX509Cert" ]]; then
     ENCODED_CERTIFICATE=$(curl "${CA_LAMBDA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" | tr -d '"')
     CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)
-    sh -c "echo '$CERTIFICATE' > ${SYSTEM_SSL_DIR}/privateCA/public.crt"
+    sudo sh -c "echo '$CERTIFICATE' > ${SYSTEM_SSL_DIR}/privateCA/public.crt"
     echo "Certificate written to ${SYSTEM_SSL_DIR}/privateCA/public.crt"
 fi
+
+# Clean up
+deactivate
+rm -r env/

@@ -21,13 +21,13 @@ export const handler = async (event) => {
       const hostSSHCert = await signHostSSHCertificate(callerIdentity, secret, event.certPubkey);
       return {
         statusCode: 200,
-        body: JSON.stringify(Buffer.from(hostSSHCert).toString('base64'))
+        body: "{\"certificate\" : \""+Buffer.from(hostSSHCert).toString('base64')+"\", \"user_ca.pub\": \""+secret["user_ca.pub"]+"\"}"
       };
     case "generateClientSSHCert":
       const clientSSHCert = await signClientSSHCertificate(callerIdentity, secret, event.certPubkey);
       return {
         statusCode: 200,
-        body: JSON.stringify(Buffer.from(clientSSHCert).toString('base64'))
+        body: "{\"certificate\" : \""+Buffer.from(clientSSHCert).toString('base64')+"\", \"host_ca.pub\": \""+secret["host_ca.pub"]+"\"}"
       };
     case "generateClientX509Cert":
       return await generateClientX509Cert(callerIdentity, secret, event);
