@@ -17,7 +17,8 @@ This creates the following resources on AWS:
 - A policy to be attached to the role giving read access to created secret
 - An openSSH layer to facilitate SSH operations
 - The lambda function to act as a privateCA
-  
+
+Note: Once the lambda is deployed you will need to manually add an environment variable called `AWS_SCRTS_REGION` to store the region in which AWS secrets for privateCA reside. 
 
 ## Usage
 
