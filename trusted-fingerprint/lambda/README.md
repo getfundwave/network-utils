@@ -15,6 +15,7 @@ To set up as a Lambda function, follow these steps:
 3. Run `deploy-lambda-layer.sh` to deploy the lambda function along with the layer.
 4. To update the lambda function, edit `server.py` then run `update-lambda.sh`.
 5. To update the layer, modify `requirements.txt` and then run `update-layer.sh`.
+6. Add an environment variable called `SECRET_TOKEN` and set its value to a token to be used in Authorization header while invoking the lambda.
 6. Configure an API via API Gateway as an event source to trigger the Lambda function with the required event payload.
 
 To set up an API using API Gateway, follow these steps:
