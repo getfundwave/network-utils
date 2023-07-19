@@ -1,7 +1,11 @@
 #!/bin/bash
-access_key_id=$1
-secret_access_key_id=$2
-profile=${3:-'internal'}
+read -p "Enter profile name > " PROFILE
+read -p "Enter access key id > " ACCESS_KEY_ID
+read -sp "Enter secret key >" SECRET_ACCESS_KEY
 
-password=$(echo "{ "AccessKeyId": "$access_key_id", "SecretAccessKey": "$secret_access_key_id" }" | base64)
-printf $password | secret-tool store --label="AWS Account Access Key-Pair" provider aws profile $profile
+PROFILE=${PROFILE:-'default'}
+password=$(echo "$ACCESS_KEY_ID":"$SECRET_ACCESS_KEY")
+printf $password | secret-tool store --label="AWS Account Access Key-Pair $PROFILE" provider aws profile $PROFILE
+
+printf "\nDone\n"
+
