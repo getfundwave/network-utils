@@ -5,6 +5,9 @@ aws-credentials-utils lets you store your AWS ACCESS_KEY_ID and SECRET_ACCESS_KE
 1. gnome-keyring
 2. libsecret-tools
 
+#### Mac:
+None
+
 ## Steps
 1. Edit ~/.aws/config
    1. Copy the contents of config.sample and replace profile with the AWS profile name you want to set.
