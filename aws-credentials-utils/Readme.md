@@ -1,9 +1,12 @@
-aws-credentials-utils lets you store your AWS ACCESS_KEY_ID and SECRET_ACCESS_KEY in a secure storage. 
+aws-credentials-utils lets you store your AWS ACCESS_KEY_ID and SECRET_ACCESS_KEY in a secure storage depending on your OS. 
 
 ## Prerequisites
-#### Ubuntu:
+#### Linux:
 1. gnome-keyring
 2. libsecret-tools
+
+#### Mac:
+None
 
 ## Steps
 1. Edit ~/.aws/config
@@ -21,20 +24,20 @@ aws-credentials-utils lets you store your AWS ACCESS_KEY_ID and SECRET_ACCESS_KE
        ```
     3. Execute
         ```
-        sh store-credentials-ubuntu.sh
+        sh store-credentials.sh
         ```
     4. You will get a prompt. Enter the values.
     
     For mac:
     1. Run
         ```
-        sh store-credentials-ubuntu.sh
+        sh store-credentials.sh
         ```
 
 3. To get the credentials.
     1. Make get-credentials executable. Eg.
         ```
-        chmod +x get-credentials-ubuntu.sh
+        chmod +x get-credentials.sh
         ```
     2. Path for this file has already been configured in step 1.
     3. Run any aws command with the profile you have set. Eg:
