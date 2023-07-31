@@ -2,9 +2,14 @@
 
 PROFILE=${1:-'default'}
 
-CREDENTIALS=$(secret-tool lookup provider aws profile $PROFILE)
+if [ $(uname -o) == "GNU/Linux" ] 
+then
+  CREDENTIALS=$(secret-tool lookup provider aws profile $PROFILE)
+elif [ $(uname -o) == "Darwin" ] 
+then
+  CREDENTIALS=$(security find-generic-password -s "AWS Account Access Key-Pair $PROFILE" -a "$PROFILE"  -w )
+fi 
 
-# echo $access_key
 ACCESS_KEY_ID=$(echo "$CREDENTIALS" | awk -F':' '{ print $1 }' )
 SECRET_ACCESS_KEY=$(echo "$CREDENTIALS" | awk -F':' '{ print $2 }')
 
