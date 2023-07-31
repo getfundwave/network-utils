@@ -1,1 +1,15 @@
 threshold: medium
+fileignoreconfig:
+- filename: aws-credentials-utils/get-credentials-mac.sh
+  checksum: fb30c4bc225fc25b96463246d419bb98efaf9969b7965f81e009d42bbcc7eff5
+- filename: aws-credentials-utils/get-credentials-ubuntu.sh
+  checksum: 3a9cd943d886f6ae2b5fa315774eea9a5656df14bf6dfe6022ce89b849829877
+- filename: aws-credentials-utils/store-credentials-mac.sh
+  checksum: 661fbaba4ee24c2095436e03c1c493deb7e64a451f5765269827d9b047773226
+- filename: aws-credentials-utils/store-credentials-ubuntu.sh
+  checksum: 5333152af418535b317cc7e8a4c479be3ccd6e70157316160621fa8e0ff9bdaf
+- filename: aws-credentials/get-credentials-ubuntu.sh
+  checksum: 1d8aa280aeb3d6d09ba017bab50482dd527ed83c67b6269a7611ee6b609cd872
+- filename: aws-credentials/store-credentials-ubuntu.sh
+  checksum: 9c912ef0a683e8626764bc476da3cb19a4987e4c2d48fde9aaf23ad00c98873b
+version: "1.0"
