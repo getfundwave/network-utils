@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Variables
-FUNCTION_NAME=${1:-"VerifySSHKey"}
+FUNCTION_NAME=${1:-"trusted-fingerprint"}
 LAYER_NAME=${2:-"paramiko-layer"}
 VERIFY_SSH_LAMBDA_ROLE_ARN=${3:-$VERIFY_SSH_LAMBDA_ROLE_ARN}
-AWS_REGION=${4:-"ap-south-1"}
+AWS_REGION=${4:-"ap-southeast-1"}
 AWS_PROFILE=${5:-"default"}
 
 LAMBDA_FUNCTION_ZIP_FILE="lambda-function.zip"
@@ -43,6 +43,6 @@ aws lambda create-function \
   --profile "${AWS_PROFILE}"
 
 # Clean up
-rm -r env python
+sudo rm -r env python
 rm lambda-function.zip layer.zip
 docker rmi -f public.ecr.aws/sam/build-python3.8
