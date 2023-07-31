@@ -1,0 +1,31 @@
+name: Update SSH Verification Lambda on file change
+
+on:
+  push:
+    paths:
+      - trusted-fingerprint/lambda/server.py
+      - .github/workflows/update-ssh-verification-lambda.yml
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  update-lambda:
+    runs-on: "ubuntu-22.04"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS Credentials 
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_SSH_UPDATE_ROLE_ARN }}
+          role-session-name: UpdateSSHLambda
+
+      - name: Run update-lambda.sh
+        run: |
+          cd trusted-fingerprint/lambda/
+          bash update-lambda.sh

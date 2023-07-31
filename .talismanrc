@@ -1,3 +1,4 @@
+threshold: medium
 fileignoreconfig:
 - filename: aws-credentials-utils/get-credentials-mac.sh
   checksum: fb30c4bc225fc25b96463246d419bb98efaf9969b7965f81e009d42bbcc7eff5
