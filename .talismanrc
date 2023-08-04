@@ -1,3 +1,5 @@
 threshold: medium
-scopeconfig:
-  - scope: node
+fileignoreconfig:
+- filename: aws-credentials-utils/store-credentials.sh
+  checksum: 784aec6e80314be796af73887ba630fbaf0e116cc4d11bd5cba787a20f9c4bbb
+version: ""
