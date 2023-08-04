@@ -2,19 +2,18 @@
 
 HOST=$1
 USER_KEY=$2
-VERIFY_SSH_LAMBDA_URL=${3:-$VERIFY_SSH_LAMBDA_URL}
-VERIFY_SSH_LAMBDA_TOKEN=${4:-$VERIFY_SSH_LAMBDA_TOKEN}
-KNOWN_HOSTS=${5:-"/home/$USER/.ssh/known_hosts"}
-
+TRUSTED_FINGERPRINT_SERVER_URL=${3:-$TRUSTED_FINGERPRINT_SERVER_URL}
+TRUSTED_FINGERPRINT_SERVER_TOKEN=${4:-$TRUSTED_FINGERPRINT_SERVER_TOKEN}
+HOMEDIR=$(eval echo ~)
+KNOWN_HOSTS=${5:-"/$HOMEDIR/.ssh/known_hosts"}
 USER_KEY_TYPE=$(echo $USER_KEY | cut -d " " -f 1)
 
-if [[ $USER_KEY_TYPE == "ssh-ed25519" ]]; then
-    host_key=$(ssh-keyscan -t ed25519 $HOST | awk '{print $3}')
-elif [[ $USER_KEY_TYPE == "ssh-rsa" ]]; then
-    host_key=$(ssh-keyscan -t rsa $HOST | awk '{print $3}')
-elif [[ $USER_KEY_TYPE == "ecdsa-sha2-nistp256" ]]; then
-    host_key=$(ssh-keyscan -t ecdsa $HOST | awk '{print $3}')
-fi
+hash_known_hosts=$(ssh -G * | awk '/hashknownhosts/ {print $2}')
+hashed_hostname=$HOST
+
+keyscan_output=$(ssh-keyscan -t $USER_KEY_TYPE $HOST 2> /dev/null)
+[[ "$hash_known_hosts" == "yes" ]] && hashed_hostname=$(echo "$keyscan_output" | awk '{print $1}')
+host_key=$(echo "$keyscan_output" | awk '{print $3}')
 
 # Check if the key is empty
 if [[ -z "$host_key" ]]; then
@@ -22,12 +21,8 @@ if [[ -z "$host_key" ]]; then
     exit 1
 fi
 
-hashed_hostname=$(echo -n "$HOST" | sha256sum | cut -d " " -f 1 | awk '{ print $1 }')
-
-# Check if the hostname (hashed or unhashed) exists in known hosts
-if [[ $(grep -q "$HOST $USER_KEY_TYPE" "$KNOWN_HOSTS"; echo $?) -eq 0 || 
-        $(grep -q "$hashed_hostname $USER_KEY_TYPE" "$KNOWN_HOSTS"; echo $?) -eq 0 
-    ]]; then
+# Check if the hostname exists in known hosts
+if [[  $(grep -q "$hashed_hostname $USER_KEY_TYPE'" $KNOWN_HOSTS; echo $?) -eq 0 ]]; then
     echo "Key found in known_hosts."
     exit 0
 else
@@ -41,9 +36,9 @@ else
     -d '{
             "Host": '"\"${HOST}\""', 
             "KeyType": '"\"${USER_KEY_TYPE}\""', 
-            "Authorization": '"\"Bearer ${VERIFY_SSH_LAMBDA_TOKEN}\""'
+            "Authorization": '"\"Bearer ${TRUSTED_FINGERPRINT_SERVER_TOKEN}\""'
         }' \
-    $VERIFY_SSH_LAMBDA_URL)
+    $TRUSTED_FINGERPRINT_SERVER_URL)
 
     if [[ $lambda_response_status != "200" ]]; then
         echo "Encountered server error"
@@ -59,7 +54,7 @@ else
         
         echo "Key verified."
         echo "Adding keys to known hosts"
-        echo "$HOST $USER_KEY_TYPE $lambda_response_key" >> $KNOWN_HOSTS
+        echo "$hashed_hostname $USER_KEY_TYPE $lambda_response_key" >> $KNOWN_HOSTS
         exit 0
 
     else
