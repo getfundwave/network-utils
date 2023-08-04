@@ -1,5 +1,14 @@
 import forge from 'node-forge';
 import md from 'node-forge';
+import crypto from "crypto";
+
+const countryName = process.env.countryName ?? "SG";
+const localityName =  process.env.localityName ?? "Singapore";
+const organizationName =  process.env.organizationName ?? "Fundwave";
+const organizationalUnitName = process.env.localityName ?? "Fundwave";
+
+const validityInDays = process.env.validityInDays ?? 1;
+const messageDigestAlg = process.env.messageDigestAlg ?? "sha256";
 
 export const generateClientX509Cert = async (callerIdentity, secret, event) => {
 
@@ -33,23 +42,17 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
   const clientCertReq = pki.createCertificationRequest();
   clientCertReq.publicKey = clientPublicKey;
   clientCertReq.setSubject([
-    { name: 'countryName', value: 'US' },
-    { name: 'localityName', value: 'California' },
-    { name: 'organizationName', value: 'Fundwave' },
-    { name: 'organizationalUnitName', value: 'Fundwave' },
+    { name: 'countryName', value: countryName },
+    { name: 'localityName', value: localityName },
+    { name: 'organizationName', value: organizationName },
+    { name: 'organizationalUnitName', value: organizationalUnitName },
     { name: 'commonName', value: roleName }
   ]);
 
   // Sign the client certificate request with the root certificate and private key
   const clientCert = pki.createCertificate();
   clientCert.publicKey = clientCertReq.publicKey;
-  clientCert.serialNumber = '01'; // Set a unique serial number
-
-  const startDate = new Date(); // Valid from the current date and time
-  const endDate = new Date();
-  endDate.setDate(startDate.getDate() + 1);
-  clientCert.validity.notBefore = startDate;
-  clientCert.validity.notAfter = endDate;
+  // clientCert.serialNumber = crypto.randomBytes(8).toString("hex"); // Set a unique serial number upto 20 bytes. https://security.stackexchange.com/questions/35691/what-is-the-difference-between-serial-number-and-thumbprint https://www.hindawi.com/journals/scn/2019/6013846/
 
   clientCert.setSubject(clientCertReq.subject.attributes);
   clientCert.setIssuer(rootCert.subject.attributes);
@@ -57,7 +60,14 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
     { name: 'basicConstraints', cA: false },
     { name: 'keyUsage', digitalSignature: true, nonRepudiation: true, keyEncipherment: true },
   ]);
-  clientCert.sign(rootKey, md.sha256.create());
+
+  const startDate = new Date(); // Valid from the current date and time
+  const endDate = new Date();
+  endDate.setDate(startDate.getDate() + validityInDays);
+  clientCert.validity.notBefore = startDate;
+  clientCert.validity.notAfter = endDate;
+
+  clientCert.sign(rootKey, md[messageDigestAlg].create());
 
   // Convert the signed client certificate to PEM format
   const clientCertPem = pki.certificateToPem(clientCert);
@@ -65,4 +75,5 @@ export const generateClientX509Cert = async (callerIdentity, secret, event) => {
     statusCode: 200,
     body: Buffer.from(clientCertPem).toString('base64')
   };
+  
 }
