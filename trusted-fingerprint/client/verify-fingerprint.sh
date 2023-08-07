@@ -5,7 +5,7 @@ USER_KEY=$2
 TRUSTED_FINGERPRINT_SERVER_URL=${3:-$TRUSTED_FINGERPRINT_SERVER_URL}
 TRUSTED_FINGERPRINT_SERVER_TOKEN=${4:-$TRUSTED_FINGERPRINT_SERVER_TOKEN}
 HOMEDIR=$(eval echo ~)
-KNOWN_HOSTS=${5:-"/$HOMEDIR/.ssh/known_hosts"}
+KNOWN_HOSTS=${5:-"$HOMEDIR/.ssh/known_hosts"}
 USER_KEY_TYPE=$(echo $USER_KEY | cut -d " " -f 1)
 
 hash_known_hosts=$(ssh -G * | awk '/hashknownhosts/ {print $2}')
