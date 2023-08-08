@@ -29,8 +29,9 @@ else
     echo "Key not found in known_hosts."
     echo "Attempting key verification..."
 
+    tempkeyfile="key-$(echo $RANDOM | md5sum | head -c 20; echo;)"
     lambda_response_status=$(curl -sw '%{http_code}' \
-    -o key.txt \
+    -o $tempkeyfile \
     -X 'POST' \
     -H 'Content-Type: application/json' \
     -d '{
@@ -45,8 +46,8 @@ else
         exit 1
     fi
 
-    lambda_response_key=$(cat key.txt)
-    rm key.txt
+    lambda_response_key=$(cat $tempkeyfile)
+    rm $tempkeyfile
 
     if [[ 
         $host_key == $lambda_response_key
