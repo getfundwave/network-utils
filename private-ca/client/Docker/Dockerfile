@@ -6,7 +6,8 @@ ENV CA_ACTION=${CA_ACTION} \
     SYSTEM_SSH_DIR=${SYSTEM_SSH_DIR} \
     SYSTEM_SSL_DIR=${SYSTEM_SSL_DIR} \
     AWS_STS_REGION=${AWS_STS_REGION} \
-    AWS_PROFILE=${AWS_PROFILE}
+    AWS_PROFILE=${AWS_PROFILE} \
+    CURL_CA_BUNDLE="/etc/ssl/certs/ca_bundle.crt"
 
 # RUN DEBIAN_FRONTEND="noninteractive" apt update && apt install -y tzdata keyboard-configuration
 # RUN apt -y install curl unzip groff less jq pip python3 python3-venv openssh-client openssl cron
