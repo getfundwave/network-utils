@@ -3,7 +3,7 @@ name: Build Private CA on Push
 on:
   push:
     paths:
-      - private-ca/client/Docker/Dockerfile
+      - private-ca/client/Docker/**
       - .github/workflows/build-private-ca-on-push.yml
 
 jobs:
