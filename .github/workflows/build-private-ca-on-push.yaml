@@ -14,7 +14,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build Docker Image
       run: |
-        cd private-ca/client/Docker/Dockerfile
+        cd private-ca/client/Docker/
         [[ "$GITHUB_REF_NAME" == "main" ]] && export TAG="latest" || TAG="$GITHUB_REF_NAME"
         docker build . --tag ghcr.io/getfundwave/network-utils/private-ca:$TAG
     - name: Publish docker image
