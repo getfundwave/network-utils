@@ -1,6 +1,7 @@
 #!/bin/bash
 
 URL=$1
+BRANCH=${2:-"main"}
 
 if [ -z "$1" ]; then
   echo "Usage [REMOTE-URL]"
@@ -13,7 +14,7 @@ SUBDIR="$(echo "$URL" | sed -n 's|\(.*github.com\)/\([^/]*\)/\([^/]*\)/\(.*\)|\4
 
 test -d "$MAIN_DIR" || mkdir "$MAIN_DIR"
 cd "$MAIN_DIR" || exit
-test -d .git || git init --initial-branch=main
+test -d .git || git init --initial-branch="$BRANCH"
 if [ "$(git remote show | wc -l)" = "0" ]; then
   git remote add origin "$REMOTE"
 fi
@@ -23,5 +24,5 @@ if test -f .git/info/sparse-checkout; then
 else
   git sparse-checkout set "$SUBDIR"
 fi
-git pull origin main --depth=1 --ff-only || git pull origin master --depth=1 --ff-only
+git pull origin "$BRANCH" --depth=1 --ff-only
 cd ..
