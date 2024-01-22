@@ -22,7 +22,7 @@ if [[ -z "$host_key" ]]; then
 fi
 
 # Check if the hostname exists in known hosts
-if [[  $(grep -q "$hashed_hostname $USER_KEY_TYPE" $KNOWN_HOSTS; echo $?) -eq 0 ]]; then
+if [[  $(test -f "$KNOWN_HOSTS"  && grep -q "$hashed_hostname $USER_KEY_TYPE" $KNOWN_HOSTS; echo $?) -eq 0 ]]; then
     echo "Key found in known_hosts."
     exit 0
 else
