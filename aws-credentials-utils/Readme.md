@@ -8,7 +8,7 @@ aws-credentials-utils lets you store your AWS ACCESS_KEY_ID and SECRET_ACCESS_KE
 #### Mac:
 None
 
-## Steps
+## Steps To store Access Token 
 1. Edit ~/.aws/config
    1. Copy the contents of config.sample and replace profile with the AWS profile name you want to set.
    2. Replace the location of your get-credentials file.
@@ -24,14 +24,14 @@ None
        ```
     3. Execute
         ```
-        sh store-credentials.sh
+        sh store-credentials.sh creds
         ```
     4. You will get a prompt. Enter the values.
     
     For mac:
     1. Run
         ```
-        sh store-credentials.sh
+        sh store-credentials.sh creds
         ```
 
 3. To get the credentials.
@@ -44,3 +44,14 @@ None
         ```
         aws s3 ls --profile <profile>
         ```
+## Steps to configure use MFA script
+1. In the get-token.sh script, we will need the MFA token and the arn of the mfa device that was registered for MFA.
+   The MFA device ARN can be obtained by running the command:
+       ```
+        aws iam list-virtual-mfa-devices --query "VirtualMFADevices[?User.UserName=='AWS_USERNAME'].SerialNumber"
+
+       ```
+2. Run the get-token.sh script as follows:
+    ```
+        bash get-token.sh [TOKEN] [MFA-DEVICE-ARN] [AWS_PROFILE]
+    ```
