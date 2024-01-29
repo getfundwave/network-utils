@@ -16,7 +16,7 @@ SECRET_ACCESS_KEY=$(echo "$CREDENTIALS" | awk -F':' '{ print $2 }')
 SESSION_TOKEN=$(echo "$CREDENTIALS" | awk -F':' '{ print $3 }')
 
 # Output the formatted JSON structure
-if [ "$OPTION" != "token" ]; then
+if [ "$OPTION" != "notoken" ]; then
   cat <<EOF
   {
     "Version": 1,

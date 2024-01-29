@@ -11,7 +11,6 @@ None
 ## Steps To store Access Token 
 1. Edit ~/.aws/config
    1. Copy the contents of config.sample and replace profile with the AWS profile name you want to set.
-   2. Replace the location of your get-credentials file.
 2. Store the credentials. 
    In case of ubuntu follow these steps:
     1. Install gnome-keyring to store secrets.
@@ -24,14 +23,14 @@ None
        ```
     3. Execute
         ```
-        sh store-credentials.sh creds
+        bash store-credentials.sh
         ```
     4. You will get a prompt. Enter the values.
     
     For mac:
     1. Run
         ```
-        sh store-credentials.sh creds
+        bash store-credentials.sh
         ```
 
 3. To get the credentials.
@@ -40,9 +39,9 @@ None
         chmod +x get-credentials.sh
         ```
     2. Path for this file has already been configured in step 1.
-    3. Run any aws command with the profile you have set. Eg:
+    3. Try running the following command to check if the credentials have been stored properly
         ```
-        aws s3 ls --profile <profile>
+        bash ./get-credentials.sh creds<profile> notoken
         ```
 ## Steps to configure use MFA script
 1. In the get-token.sh script, we will need the MFA token and the arn of the mfa device that was registered for MFA.

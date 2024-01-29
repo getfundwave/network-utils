@@ -10,7 +10,7 @@ CREDENTIALS=$(echo "$ACCESS_KEY_ID":"$SECRET_ACCESS_KEY")
 
 if [ $(uname -o) == "GNU/Linux" ] 
 then
-    printf $CREDENTIALS | secret-tool store --label="AWS Account Access Key-Pair $PROFILE" provider aws profile $PROFILE
+    printf $CREDENTIALS | secret-tool store --label="AWS Account Access Key-Pair $PROFILE" provider aws profile "creds$PROFILE"
 elif [ $(uname -o) == "Darwin" ] 
 then
     security add-generic-password -s "AWS Account Access Key-Pair $PROFILE" -a $PROFILE -w $CREDENTIALS
