@@ -4,12 +4,13 @@ aws-credentials-utils lets you store your AWS ACCESS_KEY_ID and SECRET_ACCESS_KE
 #### Linux:
 1. gnome-keyring
 2. libsecret-tools
+3. jq
 
 #### Mac:
 None
 
 ## Steps To store Access Token 
-1. Edit ~/.aws/config
+1. Edit ~/.aws/credentials
    1. Copy the contents of config.sample and replace profile with the AWS profile name you want to set.
 2. Store the credentials. 
    In case of ubuntu follow these steps:
@@ -20,6 +21,10 @@ None
     2. Install libsecrets-tool to store secrets in gnome-keyring.
        ```
        sudo apt install libsecret-tools
+       ```
+    3. Install jq
+       ```
+       sudo apt install jq
        ```
     3. Execute
         ```
@@ -48,7 +53,6 @@ None
    The MFA device ARN can be obtained by running the command:
        ```
         aws iam list-virtual-mfa-devices --query "VirtualMFADevices[?User.UserName=='AWS_USERNAME'].SerialNumber"
-
        ```
 2. Run the get-token.sh script as follows:
     ```
