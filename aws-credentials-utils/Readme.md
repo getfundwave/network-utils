@@ -51,9 +51,9 @@ None
 ## Steps to configure use MFA script
 1. In the get-token.sh script, we will need the MFA token and the arn of the mfa device that was registered for MFA.
    The MFA device ARN can be obtained by running the command:
-       ```
-        aws iam list-virtual-mfa-devices --query "VirtualMFADevices[?User.UserName=='AWS_USERNAME'].SerialNumber"
-       ```
+   ```
+   aws iam list-virtual-mfa-devices --query "VirtualMFADevices[?User.UserName==AWS_USERNAME].SerialNumber"
+   ```
 2. Run the get-token.sh script as follows:
     ```
         bash get-token.sh [TOKEN] [MFA-DEVICE-ARN] [AWS_PROFILE]
