@@ -9,20 +9,20 @@ if [ -z "$PROFILE" ] || [ -z "$AWS_USERNAME" ]; then
 fi
 
 # Checking if all dependencies are installed, install if dependencies aren't present
-if [ "$(dpkg -s jq 2>/dev/null | grep -c installed)" = 0 ]; then
+if [ "$(uname -o)" = "GNU/Linux" ] && [ "$(dpkg -s jq 2>/dev/null | grep -c installed)" = 0 ]; then
     echo "jq not found... Installing jq"
     sudo apt-get install jq
 else
     echo "Found jq"
 fi
 
-if [ "$(dpkg -s libsecret-tools 2>/dev/null | grep -c installed )" = 0 ]; then
+if [ "$(uname -o)" = "GNU/Linux" ] && [ "$(dpkg -s libsecret-tools 2>/dev/null | grep -c installed )" = 0 ]; then
     echo "libsecret-tools not found, installing libsecret-tools"
     sudo apt-get install libsecret-tools
 else
     echo "found libsecret-tools"
 fi
-if [ "$(dpkg -s gnome-keyring 2>/dev/null | grep -c installed )" = 0 ]; then
+if [ "$(uname -o)" = "GNU/Linux" ] && [ "$(dpkg -s gnome-keyring 2>/dev/null | grep -c installed )" = 0 ]; then
     echo "gnome-keyring not found, installing gnome-keyring"
     sudo apt-get install gnome-keyring
 else
