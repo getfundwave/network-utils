@@ -1,2 +1,2 @@
 [<profile>]
-credential_process = /path/to/get-credentials.sh creds<profile> notoken
+credential_process = get-credentials creds<profile> notoken

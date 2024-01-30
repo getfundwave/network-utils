@@ -9,7 +9,7 @@ if [ -z "$TOKEN" ] || [ -z "$DEVICE" ]; then
     exit
 fi
 
-test -f "$HOME/.aws/credentials" && sed -i 's/get-credentials.sh '$PROFILE'/get-credentials.sh creds'$PROFILE' notoken/' ~/.aws/credentials
+test -f "$HOME/.aws/credentials" && sed -i 's/get-credentials '$PROFILE'/get-credentials creds'$PROFILE' notoken/' ~/.aws/credentials
 
 echo "Gettings credentials... "
 CREDS=$(aws sts get-session-token --serial-number "$DEVICE" --token-code "$TOKEN" --duration-seconds 28800 --output json)
@@ -23,4 +23,4 @@ CREDENTIALS="$ACCESS_KEY:$SECRET_ACCESS_KEY:$SESSION_TOKEN"
 echo "$CREDENTIALS" | secret-tool store --label="AWS Account Access Key-Pair $PROFILE" provider aws profile "$PROFILE"
 echo "Credentials set"
 
-test -f "$HOME/.aws/credentials" && sed -i 's/get-credentials.sh creds'$PROFILE' notoken/get-credentials.sh '$PROFILE'/' ~/.aws/credentials
+test -f "$HOME/.aws/credentials" && sed -i 's/get-credentials creds'$PROFILE' notoken/get-credentials '$PROFILE'/' ~/.aws/credentials

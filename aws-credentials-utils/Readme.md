@@ -9,7 +9,12 @@ aws-credentials-utils lets you store your AWS ACCESS_KEY_ID and SECRET_ACCESS_KE
 #### Mac:
 None
 
-## Steps To store Access Token 
+## Installation (Ubuntu)
+1. Run the setup.sh script
+```
+bash setup.sh [PROFILE] [AWS-USERNAME]
+```
+## WORKING 
 1. Edit ~/.aws/credentials
    1. Copy the contents of config.sample and replace profile with the AWS profile name you want to set.
 2. Store the credentials. 
