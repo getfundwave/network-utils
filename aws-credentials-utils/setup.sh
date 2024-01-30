@@ -58,10 +58,12 @@ sed -i "s/default/$PROFILE/" ~/.local/bin/get-token
 echo "Adding ~/.local/bin to PATH"
 if [ -f "$HOME/.bashrc" ]; then
     echo "export PATH=$HOME/.local/bin:$PATH" >> "$HOME/.bashrc"
+    echo "export AWS_DEFAULT_PROFILE=$PROFILE" >> "$HOME/.bashrc"
 fi
 
 if [ -f "$HOME/.zshrc" ]; then
     echo "export PATH=$HOME/.local/bin:$PATH" >> "$HOME/.zshrc"
+    echo "export AWS_DEFAULT_PROFILE=$PROFILE" >> "$HOME/.zshrc"
 fi
 
 # Final steps
