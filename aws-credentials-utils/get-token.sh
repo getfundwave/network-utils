@@ -12,7 +12,7 @@ fi
 test -f "$HOME/.aws/credentials" && sed -i 's/get-credentials '$PROFILE'/get-credentials creds'$PROFILE' notoken/' ~/.aws/credentials
 
 echo "Gettings credentials... "
-CREDS=$(aws sts get-session-token --serial-number "$DEVICE" --token-code "$TOKEN" --duration-seconds 28800 --output json)
+CREDS=$(aws sts get-session-token --serial-number "$DEVICE" --token-code "$TOKEN" --duration-seconds 28800 --output json --profile "$PROFILE")
 
 ACCESS_KEY=$(echo "$CREDS" | jq '.Credentials.AccessKeyId' | tr -d '"')
 SECRET_ACCESS_KEY=$(echo "$CREDS" | jq '.Credentials.SecretAccessKey' | tr -d '"')

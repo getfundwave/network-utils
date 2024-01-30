@@ -9,20 +9,20 @@ if [ -z "$PROFILE" ] || [ -z "$AWS_USERNAME" ]; then
 fi
 
 # Checking if all dependencies are installed, install if dependencies aren't present
-if [ "$(dpkg -l jq | grep -c 'jq')" = 0 ]; then
+if [ "$(dpkg -s jq 2>/dev/null | grep -c installed)" = 0 ]; then
     echo "jq not found... Installing jq"
     sudo apt-get install jq
 else
     echo "Found jq"
 fi
 
-if [ "$(dpkg -l libsecret-tools | grep -c 'libsecret-tools')" = 0 ]; then
+if [ "$(dpkg -s libsecret-tools 2>/dev/null | grep -c installed )" = 0 ]; then
     echo "libsecret-tools not found, installing libsecret-tools"
     sudo apt-get install libsecret-tools
 else
     echo "found libsecret-tools"
 fi
-if [ "$(dpkg -l gnome-keyring | grep -c 'gnome-keyring')" = 0 ]; then
+if [ "$(dpkg -s gnome-keyring 2>/dev/null | grep -c installed )" = 0 ]; then
     echo "gnome-keyring not found, installing gnome-keyring"
     sudo apt-get install gnome-keyring
 else
@@ -49,7 +49,7 @@ cp ./get-token.sh "$HOME/.local/bin/get-token" || exit
 chmod +x "$HOME/.local/bin/get-token"
 
 # Getting mfa device configured by user on the console
-DEVICE=$(aws iam list-virtual-mfa-devices --query "VirtualMFADevices[?User.UserName=='$AWS_USERNAME'].SerialNumber" --output text)
+DEVICE=$(aws iam list-virtual-mfa-devices --query "VirtualMFADevices[?User.UserName=='$AWS_USERNAME'].SerialNumber" --output text --profile "$PROFILE")
 
 sed -i "s|DEVICE=.*|DEVICE=$DEVICE|" ~/.local/bin/get-token
 sed -i "s/default/$PROFILE/" ~/.local/bin/get-token
