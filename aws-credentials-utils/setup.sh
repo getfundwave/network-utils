@@ -42,7 +42,7 @@ sed -i "s/<profile>/$PROFILE/" "$HOME/.aws/credentials"
 
 # Putting get-credentials and get-path in .local/bin folder
 echo "Adding get-credentials and get-token to ~/.local/bin"
-test -d "$HOME/.local/bin" || mkdir -r "$HOME/.local/bin"
+test -d "$HOME/.local/bin" || mkdir -p "$HOME/.local/bin"
 cp ./get-credentials.sh "$HOME/.local/bin/get-credentials" || exit
 chmod +x "$HOME/.local/bin/get-credentials"
 cp ./get-token.sh "$HOME/.local/bin/get-token" || exit
