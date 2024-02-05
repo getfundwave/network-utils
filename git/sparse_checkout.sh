@@ -19,7 +19,7 @@ MAIN_DIR="$(echo "$URL" | sed -n 's|\(.*github.com\)/\([^/]*\)/\([^/]*\)/\(.*\)|
 SUBDIR="$(echo "$URL" | sed -n 's|\(.*github.com\)/\([^/]*\)/\([^/]*\)/\(.*\)|\4|p')"
 
 test -d "$MAIN_DIR" || mkdir "$MAIN_DIR"
-cd "$MAIN_DIR" || exit
+cd "$MAIN_DIR"
 
 # reference: https://stackoverflow.com/questions/600079/how-do-i-clone-a-subdirectory-only-of-a-git-repository
 test -d .git || git init --initial-branch="$BRANCH"
