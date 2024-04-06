@@ -1,0 +1,26 @@
+name: Build Private CA on Push
+
+on:
+  push:
+    paths:
+      - private-ca/client/Docker/**
+      - .github/workflows/build-private-ca-on-push.yml
+
+jobs:
+
+  docker_publish:
+    runs-on: "ubuntu-22.04"
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build Docker Image
+      run: |
+        cd private-ca/client/Docker/
+        [[ "$GITHUB_REF_NAME" == "main" ]] && export TAG="latest" || TAG="$GITHUB_REF_NAME"
+        docker build . --tag ghcr.io/getfundwave/network-utils/private-ca:$TAG
+    - name: Publish docker image
+      env:
+        TOKEN: ${{secrets.GITHUB_TOKEN}}
+      run: |
+        echo $TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+        [[ "$GITHUB_REF_NAME" == "main" ]] && export TAG="latest" || TAG="$GITHUB_REF_NAME"
+        docker push ghcr.io/getfundwave/network-utils/private-ca:$TAG
