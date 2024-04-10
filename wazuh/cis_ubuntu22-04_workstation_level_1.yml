@@ -8,7 +8,6 @@
 # Foundation
 #
 # SCA policy for Ubuntu Linux 22.04 LTS based on Center for Internet Security Ubuntu Linux 22.04 LTS Benchmark v1.0.0 - 08-30-2022
-# Some modifications so copyright fundwaveee (C)
 
 policy:
   id: "cis_ubuntu22-04_workstation_level_1"
