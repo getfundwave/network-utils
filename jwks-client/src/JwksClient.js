@@ -49,7 +49,6 @@ class JwksClient {
   }
 
   async getSigningKey(kid) {
-    console.log(`Fetching signing key for '${kid}'`);
     const keys = await this.getSigningKeys();
 
     if (kid === undefined || kid === null) {

@@ -9,6 +9,7 @@
   "license": "ISC",
   "dependencies": {
     "jwk-to-pem": "^2.0.5",
-    "lru-memoizer": "^2.2.0"
+    "lru-memoizer": "^2.2.0",
+    "setimmediate": "^1.0.5"
   }
 }

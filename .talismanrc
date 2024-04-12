@@ -2,4 +2,6 @@ threshold: medium
 fileignoreconfig:
 - filename: aws-credentials-utils/store-credentials.sh
   checksum: 784aec6e80314be796af73887ba630fbaf0e116cc4d11bd5cba787a20f9c4bbb
+- filename: jwks-client/package-lock.json
+  checksum: dcc68fcdf5c074fe5a9b31bb0f2da07849d7681c5c7a5d9205cfa15ac935d004
 version: ""

@@ -2,7 +2,6 @@ async function request({ uri, headers }) {
   try {
     const response = await fetch(uri, {
       method: "GET",
-      // cache: "default",
       headers,
     });
 
