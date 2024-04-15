@@ -45,6 +45,7 @@ jobs:
           patch-wording: ${{ null }}
           rc-wording: ${{ null }}
           default: "${{ env.BRANCH == 'main' && 'patch' || 'prerelease' }}"
+          PACKAGEJSON_DIR: "jwks-slim"
           preid: "${{ env.BRANCH }}"
           skip-tag: "true"
           skip-push: "true"
