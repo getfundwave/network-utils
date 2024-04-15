@@ -4,7 +4,7 @@
   "description": "Library to retrieve RSA public keys from a JWKS endpoint",
   "main": "src/index.js",
   "scripts": {
-    "test": "jest --verbose"
+    "test": "jest --verbose --detectOpenHandles"
   },
   "keywords": [],
   "author": "",
