@@ -1,9 +1,9 @@
 name: Release and Publish JWKS-slim
 
-on: [push]
-  # push:
-    # paths:
-      # - "jwks-slim/**"
+on: 
+  push:
+    paths:
+      - "jwks-slim/**"
 
 env:
   BRANCH_TAG: "${{ github.ref_name == 'main' && 'latest' || github.ref_name }}"
@@ -64,7 +64,7 @@ jobs:
           git commit -a -m "CI: bumps jwks-slim to $VERSION" -m "[skip ci]"
 
       - name: Publish package to npm
-        # if: ${{ github.ref_name == 'main'}}
+        if: ${{ github.ref_name == 'main'}}
         run: |
           echo //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} > ~/.npmrc
           echo registry=https://registry.npmjs.org/ >> ~/.npmrc
@@ -79,7 +79,7 @@ jobs:
           branch: ${{ github.ref }}
 
       - name: Release
-        # if: ${{ github.ref_name == 'main'}}
+        if: ${{ github.ref_name == 'main'}}
         env:
           VERSION: ${{ steps.version.outputs.newTag }}
         run: |

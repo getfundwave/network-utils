@@ -36,8 +36,9 @@ const client = new JwksClient({
 const kid = "RkI5MjI5OUY5ODc1N0Q4QzM0OUYzNkVGMTJDOUEzQkFCOTU3NjE2Rg";
 const key = await client.getSigningKey(kid);
 const signingKey = key.publicKey;
+console.log(signingKey);
 
-// Output
+// Output 
 /**
 -----BEGIN PUBLIC KEY-----
 MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAq3DnhgYgLVJknvDA3clA
