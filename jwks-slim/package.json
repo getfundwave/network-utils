@@ -1,6 +1,6 @@
 {
-  "name": "jwks-client",
-  "version": "1.0.0",
+  "name": "jwks-slim",
+  "version": "0.0.0",
   "description": "Library to retrieve RSA public keys from a JWKS endpoint",
   "main": "src/index.js",
   "scripts": {},
