@@ -12,7 +12,6 @@ env:
 
 jobs:
   publish_and_release:
-    if: github.ref_name == 'main' || contains(github.event.head_commit.message, '[publish]')
     name: Publish JWKS-slim package
     environment: "${{ github.ref_name == 'main' && 'Prod' || 'Dev' }}"
     runs-on: ubuntu-latest
