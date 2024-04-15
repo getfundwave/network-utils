@@ -1,12 +1,6 @@
 const { JwksClient } = require("../src/JwksClient.js");
-const { keys } = require("./data.js");
-
+require("./mock.js");
 describe("JwksClient", () => {
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      json: () => Promise.resolve({ keys }),
-    })
-  );
   const jwksUri = "http://jwks-auth-server/.well-known/jwks.json";
 
   describe("Get Keys", () => {

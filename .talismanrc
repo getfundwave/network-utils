@@ -12,4 +12,8 @@ fileignoreconfig:
     checksum: ed51dfeaa935310ba6d417e40ab9901eb64ebfde59f576a5dee78f31b807be8e
   - filename: jwks-slim/package-lock.json
     checksum: e4b2b40aec83aa7d4b2669103caaa6c47261fdd23bd7a4568a6a6d92972968b7
+  - filename: jwks-slim/tests/cache.test.js
+    checksum: 716f25000789d7ca18adfe07f968bae6eb2fbfa1c3d05e9e92897b9597ac5f17
+  - filename: jwks-slim/tests/mock.js
+    checksum: 0d2fd2ec4847acda384c398e04e8aab9a615a8599b0a06d685e7fb100e71537c
 version: ""
