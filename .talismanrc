@@ -6,14 +6,14 @@ fileignoreconfig:
     checksum: dcc68fcdf5c074fe5a9b31bb0f2da07849d7681c5c7a5d9205cfa15ac935d004
   - filename: jwks-slim/README.md
     checksum: a1954df51e49fc6a09d7fe04bac198fe60a4fb39b2569180475a749a72df472d
-  - filename: jwks-slim/tests/index.test.js
-    checksum: 1cfae4abf5bef13b26207000db2f2fe6f045d42bf48a4824cba374f6f82dec5c
-  - filename: jwks-slim/tests/data.js
-    checksum: ed51dfeaa935310ba6d417e40ab9901eb64ebfde59f576a5dee78f31b807be8e
   - filename: jwks-slim/package-lock.json
     checksum: e4b2b40aec83aa7d4b2669103caaa6c47261fdd23bd7a4568a6a6d92972968b7
   - filename: jwks-slim/tests/cache.test.js
     checksum: 716f25000789d7ca18adfe07f968bae6eb2fbfa1c3d05e9e92897b9597ac5f17
   - filename: jwks-slim/tests/mock.js
     checksum: 0d2fd2ec4847acda384c398e04e8aab9a615a8599b0a06d685e7fb100e71537c
+  - filename: jwks-slim/tests/keys.js
+    checksum: 207c0d07dea4c069883822b2b268d3b34c8b18bdfd645b8aa3b2be20f280c270
+  - filename: jwks-slim/tests/index.test.js
+    checksum: 992a5c1f6c254fd344ae52955aa0c1c22a59e0472fe836b0450ff499255ef6f8
 version: ""

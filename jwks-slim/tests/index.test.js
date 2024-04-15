@@ -11,19 +11,7 @@ describe("JwksClient", () => {
 
       const keys = await client.getKeys();
       expect(keys).not.toBeNull();
-      expect(keys).toHaveLength(2);
-    });
-  });
-
-  describe("Get Signing Keys", () => {
-    it("should return keys", async () => {
-      const client = new JwksClient({
-        jwksUri,
-      });
-
-      const keys = await client.getSigningKeys();
-      expect(keys).not.toBeNull();
-      expect(keys).toHaveLength(2);
+      expect(keys).toHaveLength(3);
     });
   });
 
@@ -39,33 +27,48 @@ describe("JwksClient", () => {
         expect(err.name).toBe("SigningKeyNotFoundError");
       }
     });
-  });
 
-  it("give error if kid is not defined", async () => {
-    const client = new JwksClient({
-      jwksUri,
+    it("should give error if the key type is not supported", async () => {
+      const client = new JwksClient({
+        jwksUri,
+      });
+
+      try {
+        const key = await client.getSigningKey(
+          "FdFYFzERwC2uCBB46pZQi4GG85LujR8obt-KWRBICVQ"
+        );
+      } catch (err) {
+        expect(err.name).toBe("JwksError");
+        expect(err.message).toBe("Unsupported JWK");
+      }
     });
 
-    try {
-      const key = await client.getSigningKey(undefined);
-    } catch (err) {
-      expect(err.name).toBe("SigningKeyNotFoundError");
-    }
-  });
+    it("give error if kid is not defined", async () => {
+      const client = new JwksClient({
+        jwksUri,
+      });
 
-  it("should give the key", async () => {
-    const client = new JwksClient({
-      jwksUri,
+      try {
+        const key = await client.getSigningKey(undefined);
+      } catch (err) {
+        expect(err.name).toBe("SigningKeyNotFoundError");
+      }
     });
 
-    const key = await client.getSigningKey(
-      "RkI5MjI5OUY5ODc1N0Q4QzM0OUYzNkVGMTJDOUEzQkFCOTU3NjE2Rg"
-    );
+    it("should give the key", async () => {
+      const client = new JwksClient({
+        jwksUri,
+      });
 
-    expect(key).not.toBeNull();
-    expect(key.kid).toMatch(
-      "RkI5MjI5OUY5ODc1N0Q4QzM0OUYzNkVGMTJDOUEzQkFCOTU3NjE2Rg"
-    );
-    expect(key.publicKey).toMatch("BEGIN PUBLIC KEY");
+      const key = await client.getSigningKey(
+        "RkI5MjI5OUY5ODc1N0Q4QzM0OUYzNkVGMTJDOUEzQkFCOTU3NjE2Rg"
+      );
+
+      expect(key).not.toBeNull();
+      expect(key.kid).toMatch(
+        "RkI5MjI5OUY5ODc1N0Q4QzM0OUYzNkVGMTJDOUEzQkFCOTU3NjE2Rg"
+      );
+      expect(key.publicKey).toMatch("BEGIN PUBLIC KEY");
+    });
   });
 });

@@ -1,4 +1,4 @@
-const { retrieveSigningKeys } = require("./utils");
+const { retrieveSigningKey } = require("./utils");
 const { request, cacheSigningKey, callbackSupport } = require("./wrappers");
 const JwksError = require("./errors/JwksError");
 const SigningKeyNotFoundError = require("./errors/SigningKeyNotFoundError");
@@ -32,36 +32,33 @@ class JwksClient {
     }
   }
 
-  async getSigningKeys() {
-    const keys = await this.getKeys();
-
-    if (!keys || !keys.length) {
-      throw new JwksError("The JWKS endpoint did not contain any keys");
-    }
-
-    const signingKeys = await retrieveSigningKeys(keys);
-
-    if (!signingKeys.length) {
-      throw new JwksError("The JWKS endpoint did not contain any signing keys");
-    }
-
-    return signingKeys;
-  }
-
   async getSigningKey(kid) {
-    const keys = await this.getSigningKeys();
+    try {
+      if (kid === undefined || kid === null) {
+        throw new SigningKeyNotFoundError("No KID specified");
+      }
+      const keys = await this.getKeys();
 
-    if (kid === undefined || kid === null) {
-      throw new SigningKeyNotFoundError("No KID specified");
-    }
+      if (!keys || !keys.length) {
+        throw new SigningKeyNotFoundError("The JWKS endpoint did not contain any keys");
+      }
 
-    const key = keys.find((k) => k.kid === kid);
-    if (key) {
-      return key;
-    } else {
-      throw new SigningKeyNotFoundError(
-        `Unable to find a signing key that matches '${kid}'`
-      );
+      const jwk = keys.find((k) => k.kid === kid);
+
+      if (!jwk) {
+        throw new SigningKeyNotFoundError(`Unable to find key for kid ${kid}`);
+      }
+      const signingKey = await retrieveSigningKey(jwk);
+
+      if (!signingKey) {
+        throw new SigningKeyNotFoundError(
+          `Unable to find signing key for kid ${kid}`
+        );
+      }
+
+      return signingKey;
+    } catch (err) {
+      throw err;
     }
   }
 }

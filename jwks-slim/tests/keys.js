@@ -23,6 +23,14 @@ const keys = [
     kid: "NkFCNEE1NDFDNTQ5RTQ5OTE1QzRBMjYyMzY0NEJCQTJBMjJBQkZCMA",
     x5t: "NkFCNEE1NDFDNTQ5RTQ5OTE1QzRBMjYyMzY0NEJCQTJBMjJBQkZCMA",
   },
+  {
+    kty: "OKP",
+    crv: "Ed25519",
+    x: "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+    d: "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+    use: "sig",
+    kid: "FdFYFzERwC2uCBB46pZQi4GG85LujR8obt-KWRBICVQ",
+  },
 ];
 
 module.exports = {
