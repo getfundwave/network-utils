@@ -25,7 +25,7 @@ npm install jwks-slim
 const { JwksClient } = require("jwks-client");
 const client = new JwksClient({
   jwksUri: "your-jwks-endpoint",
-  cache: true,  //default: true,
+  cache: true,  //default: true
   requestHeaders: {}  //optional
 });
 ```
