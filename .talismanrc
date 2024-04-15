@@ -1,9 +1,15 @@
 threshold: medium
 fileignoreconfig:
-- filename: aws-credentials-utils/store-credentials.sh
-  checksum: 784aec6e80314be796af73887ba630fbaf0e116cc4d11bd5cba787a20f9c4bbb
-- filename: jwks-client/package-lock.json
-  checksum: dcc68fcdf5c074fe5a9b31bb0f2da07849d7681c5c7a5d9205cfa15ac935d004
-- filename: jwks-slim/README.md
-  checksum: a1954df51e49fc6a09d7fe04bac198fe60a4fb39b2569180475a749a72df472d
+  - filename: aws-credentials-utils/store-credentials.sh
+    checksum: 784aec6e80314be796af73887ba630fbaf0e116cc4d11bd5cba787a20f9c4bbb
+  - filename: jwks-client/package-lock.json
+    checksum: dcc68fcdf5c074fe5a9b31bb0f2da07849d7681c5c7a5d9205cfa15ac935d004
+  - filename: jwks-slim/README.md
+    checksum: a1954df51e49fc6a09d7fe04bac198fe60a4fb39b2569180475a749a72df472d
+  - filename: jwks-slim/tests/index.test.js
+    checksum: 1cfae4abf5bef13b26207000db2f2fe6f045d42bf48a4824cba374f6f82dec5c
+  - filename: jwks-slim/tests/data.js
+    checksum: ed51dfeaa935310ba6d417e40ab9901eb64ebfde59f576a5dee78f31b807be8e
+  - filename: jwks-slim/package-lock.json
+    checksum: e4b2b40aec83aa7d4b2669103caaa6c47261fdd23bd7a4568a6a6d92972968b7
 version: ""

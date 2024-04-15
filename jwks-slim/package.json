@@ -3,7 +3,9 @@
   "version": "0.0.1-jwks-client.2",
   "description": "Library to retrieve RSA public keys from a JWKS endpoint",
   "main": "src/index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "jest --verbose"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -11,5 +13,8 @@
     "jwk-to-pem": "^2.0.5",
     "lru-memoizer": "^2.2.0",
     "setimmediate": "^1.0.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
