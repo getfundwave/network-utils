@@ -4,4 +4,6 @@ fileignoreconfig:
   checksum: 784aec6e80314be796af73887ba630fbaf0e116cc4d11bd5cba787a20f9c4bbb
 - filename: jwks-client/package-lock.json
   checksum: dcc68fcdf5c074fe5a9b31bb0f2da07849d7681c5c7a5d9205cfa15ac935d004
+- filename: jwks-slim/README.md
+  checksum: a1954df51e49fc6a09d7fe04bac198fe60a4fb39b2569180475a749a72df472d
 version: ""
