@@ -2,9 +2,6 @@
 
 A library to retrieve signing keys from a JWKS (JSON Web Key Set) endpoint.
 
-- Supports ES modules
-- Supports CommonJS
-
 <br>
 
 Environments Supported
