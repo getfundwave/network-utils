@@ -25,6 +25,7 @@ jobs:
         run: npm ci
       - name: Run tests
         run: npm run test
+        
   publish_and_release:
     needs: test
     name: Publish JWKS-slim package
@@ -65,9 +66,6 @@ jobs:
           skip-push: "true"
           skip-commit: "true"
           bump-policy: "ignore"
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Commit changes
         env:
