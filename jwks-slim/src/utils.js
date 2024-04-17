@@ -21,7 +21,7 @@ function resolveAlg(jwk) {
     }
   }
 
-  throw new JwksError(`Unsupported JWK alg ${jwk.alg}`);
+  throw new JwksError(`Unsupported JWK`);
 }
 
 async function retrieveSigningKey(jwk) {
