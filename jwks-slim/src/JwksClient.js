@@ -17,17 +17,6 @@ class JwksClient {
     this.getSigningKey = callbackSupport(this, options);
   }
 
-  #parseToken(token) {
-    const tokenParts = token.split(".");
-    if (tokenParts.length !== 3) {
-      throw new Error("Invalid token format");
-    }
-
-    const header = JSON.parse(atob(tokenParts[0]));
-
-    return { kid: header.kid };
-  }
-
   async getKeys() {
     try {
       const res = await request({
@@ -42,9 +31,8 @@ class JwksClient {
     }
   }
 
-  async getSigningKey(jwtToken) {
+  async getSigningKey(kid) {
     try {
-      const { kid } = this.#parseToken(jwtToken);
       if (kid === undefined || kid === null) {
         throw new SigningKeyNotFoundError("No KID specified");
       }
