@@ -21,7 +21,7 @@ function resolveAlg(jwk) {
     }
   }
 
-  throw new JwksError("Unsupported JWK");
+  throw new JwksError(`Unsupported JWK alg ${jwk.alg}`);
 }
 
 async function retrieveSigningKey(jwk) {
@@ -34,9 +34,7 @@ async function retrieveSigningKey(jwk) {
       ...(typeof jwk.kid === "string" && jwk.kid
         ? { kid: jwk.kid }
         : undefined),
-      ...(typeof jwk.alg === "string" && jwk.alg
-        ? { alg: jwk.alg }
-        : undefined),
+      alg,
     };
   } catch (err) {
     throw err;
