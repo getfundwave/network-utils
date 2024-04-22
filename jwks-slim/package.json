@@ -8,8 +8,16 @@
     "test:worker": "jest --verbose --detectOpenHandles --env=@edge-runtime/jest-environment",
     "test": "npm run test:node && npm run test:worker"
   },
-  "keywords": [],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getfundwave/network-utils.git"
+  },
+  "keywords": [
+    "jwks",
+    "jwt"
+  ],
+  "homepage": "https://github.com/getfundwave/network-utils/tree/main/jwks-slim#readme", 
+  "author": "The Fundwave Authors",
   "license": "ISC",
   "dependencies": {
     "jwk-to-pem": "^2.0.5",
