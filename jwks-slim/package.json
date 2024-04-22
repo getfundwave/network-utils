@@ -1,6 +1,6 @@
 {
   "name": "jwks-slim",
-  "version": "0.0.1-jwks-client.9",
+  "version": "0.0.1-jwks-client.10",
   "description": "Library to retrieve RSA public keys from a JWKS endpoint",
   "main": "src/index.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "jwks",
     "jwt"
   ],
-  "homepage": "https://github.com/getfundwave/network-utils/tree/main/jwks-slim#readme", 
+  "homepage": "https://github.com/getfundwave/network-utils/tree/main/jwks-slim#readme",
   "author": "The Fundwave Authors",
   "license": "ISC",
   "dependencies": {
