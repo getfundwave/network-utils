@@ -2,12 +2,10 @@ threshold: medium
 fileignoreconfig:
   - filename: aws-credentials-utils/store-credentials.sh
     checksum: 784aec6e80314be796af73887ba630fbaf0e116cc4d11bd5cba787a20f9c4bbb
-  - filename: jwks-client/package-lock.json
-    checksum: dcc68fcdf5c074fe5a9b31bb0f2da07849d7681c5c7a5d9205cfa15ac935d004
   - filename: jwks-slim/README.md
     checksum: a1954df51e49fc6a09d7fe04bac198fe60a4fb39b2569180475a749a72df472d
   - filename: jwks-slim/package-lock.json
-    checksum: e710531609293e71b2b3f98ab769b34b6038572c17dd5aa16a4c86510189068d
+    checksum: d014d548f9f2997cbe1d7c4f7ec312f8c634e88788bc453ccc606ea70e081a77
   - filename: jwks-slim/tests/cache.test.js
     checksum: 716f25000789d7ca18adfe07f968bae6eb2fbfa1c3d05e9e92897b9597ac5f17
   - filename: jwks-slim/tests/mock.js

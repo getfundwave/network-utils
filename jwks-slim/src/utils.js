@@ -1,5 +1,6 @@
 const jwkToPem = require("jwk-to-pem");
 const JwksError = require("./errors/JwksError");
+const logger = require("debug")("jwks-slim");
 
 function resolveAlg(jwk) {
   if (jwk.alg) {
@@ -20,7 +21,9 @@ function resolveAlg(jwk) {
         return "ES512";
     }
   }
-
+  logger(
+    `Unsupported JWK algorith ${jwk.alg ? jwk.alg : "of family " + jwk.kty}`
+  );
   throw new JwksError(`Unsupported JWK`);
 }
 
@@ -37,6 +40,7 @@ async function retrieveSigningKey(jwk) {
       alg,
     };
   } catch (err) {
+    logger("Error retrieving public key from jwk");
     throw err;
   }
 
