@@ -49,7 +49,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 def run(server_class=HTTPServer, handler_class=RequestHandler):
-    port = int(os.environ('TRUSTED_FINGERPRINT_PORT', 80))
+    port = int(os.environ.get('TRUSTED_FINGERPRINT_PORT', 80))
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
     print(f'Starting httpd server on port {port}')
