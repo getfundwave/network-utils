@@ -1,9 +1,9 @@
-name: Release and Publish aws-ssm
+name: Release and Publish ssm-env-util
 
 on:
   push:
     paths:
-      - "aws-ssm/**"
+      - "ssm-env-util/**"
 
 env:
   BRANCH_TAG: "${{ github.ref_name == 'main' && 'latest' || github.ref_name }}"
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: "aws-ssm"
+        working-directory: "ssm-env-util"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -26,12 +26,12 @@ jobs:
 
   publish_and_release:
     needs: install_dependencies
-    name: Publish AWS-ssm package
+    name: Publish SSM env util package
     environment: "${{ github.ref_name == 'main' && 'Prod' || 'Dev' }}"
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: "aws-ssm"
+        working-directory: "ssm-env-util"
     steps:
       - name: Generate token
         if: ${{ github.ref_name == 'main'}}
@@ -58,7 +58,7 @@ jobs:
           patch-wording: ${{ null }}
           rc-wording: ${{ null }}
           default: "${{ env.BRANCH == 'main' && 'patch' || 'prerelease' }}"
-          PACKAGEJSON_DIR: "aws-ssm"
+          PACKAGEJSON_DIR: "ssm-env-util"
           preid: "${{ env.BRANCH }}"
           skip-tag: "true"
           skip-push: "true"
@@ -71,7 +71,7 @@ jobs:
         run: |
           git config user.email "fundabot@fundwave.com"
           git config user.name "fundabot"
-          git commit -a -m "CI: bumps aws-ssm to $VERSION" -m "[skip ci]"
+          git commit -a -m "CI: bumps ssm-env-util to $VERSION" -m "[skip ci]"
 
       - name: Publish package to npm
         if: ${{ github.ref_name == 'main'}}
