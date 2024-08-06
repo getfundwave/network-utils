@@ -14,4 +14,6 @@ fileignoreconfig:
     checksum: 207c0d07dea4c069883822b2b268d3b34c8b18bdfd645b8aa3b2be20f280c270
   - filename: jwks-slim/tests/index.test.js
     checksum: 992a5c1f6c254fd344ae52955aa0c1c22a59e0472fe836b0450ff499255ef6f8
+  - filename: aws-ssm/package-lock.json
+    checksum: 4cf91061e42ed9b1aafb17bdf68c9b4b24a7f86b191133ab4095fa635f8f01a0
 version: ""
