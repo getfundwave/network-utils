@@ -1,12 +1,12 @@
 import {SSMClient, GetParametersCommand } from "@aws-sdk/client-ssm";
 
-export async function getParameter (keys, ssmPrefix = "", ssmSuffix = "") {
   let input = [];
+export async function getParameter (keys, region, ssmPrefix = "", ssmSuffix = "") {
   for(let key of keys){
     input.push(ssmPrefix + key + ssmSuffix);
   }
   const client = new SSMClient({
-    region: process.env.AWS_REGION
+    region: region || process.env.AWS_REGION
   });
   let command = new GetParametersCommand({
     Names: input,
