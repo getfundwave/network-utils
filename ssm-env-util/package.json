@@ -1,5 +1,5 @@
 {
-  "name": "aws-ssm",
+  "name": "ssm-env-util",
   "version": "0.0.2-ssm.0",
   "description": "get parameters from ssm by parsing .env.template",
   "type": "module",
