@@ -18,5 +18,3 @@ export async function getParameter (keys, ssmPrefix = "", ssmSuffix = "") {
     return acc;
   },{})
 };
-
-// module.exports = { getParameter };
