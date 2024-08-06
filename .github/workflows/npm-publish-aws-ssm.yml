@@ -11,7 +11,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  test:
+  install_dependencies:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -25,7 +25,7 @@ jobs:
         run: npm ci
         
   publish_and_release:
-    needs: test
+    needs: install_dependencies
     name: Publish AWS-ssm package
     environment: "${{ github.ref_name == 'main' && 'Prod' || 'Dev' }}"
     runs-on: ubuntu-latest
@@ -74,7 +74,6 @@ jobs:
           git commit -a -m "CI: bumps aws-ssm to $VERSION" -m "[skip ci]"
 
       - name: Publish package to npm
-        if: ${{ github.ref_name == 'main'}}
         run: |
           echo //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} > ~/.npmrc
           echo registry=https://registry.npmjs.org/ >> ~/.npmrc
@@ -89,7 +88,6 @@ jobs:
           branch: ${{ github.ref }}
 
       - name: Release
-        if: ${{ github.ref_name == 'main'}}
         env:
           VERSION: ${{ steps.version.outputs.newTag }}
         run: |
