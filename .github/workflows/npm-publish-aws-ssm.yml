@@ -23,7 +23,7 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: npm ci
-        
+
   publish_and_release:
     needs: install_dependencies
     name: Publish AWS-ssm package
@@ -74,6 +74,7 @@ jobs:
           git commit -a -m "CI: bumps aws-ssm to $VERSION" -m "[skip ci]"
 
       - name: Publish package to npm
+        if: ${{ github.ref_name == 'main'}}
         run: |
           echo //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} > ~/.npmrc
           echo registry=https://registry.npmjs.org/ >> ~/.npmrc
@@ -88,6 +89,7 @@ jobs:
           branch: ${{ github.ref }}
 
       - name: Release
+        if: ${{ github.ref_name == 'main'}}
         env:
           VERSION: ${{ steps.version.outputs.newTag }}
         run: |
