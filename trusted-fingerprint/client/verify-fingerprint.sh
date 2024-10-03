@@ -11,7 +11,7 @@ USER_KEY_TYPE=$(echo $USER_KEY | cut -d " " -f 1)
 hash_known_hosts=$(ssh -G * | awk '/hashknownhosts/ {print $2}')
 hashed_hostname=$HOST
 
-keyscan_output=$(ssh-keyscan -t $USER_KEY_TYPE $HOST 2> /dev/null)
+keyscan_output=$(ssh-keyscan -T 60 -t $USER_KEY_TYPE $HOST 2> /dev/null)
 [[ "$hash_known_hosts" == "yes" ]] && hashed_hostname=$(echo "$keyscan_output" | awk '{print $1}')
 host_key=$(echo "$keyscan_output" | awk '{print $3}')
 
