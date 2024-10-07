@@ -26,6 +26,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         key_type = event_body['KeyType']
 
         secret_token = os.environ['SECRET_TOKEN']
+        keyscan_timeout = os.environ['KEYSCAN_TIMEOUT'] or 60
 
         if len(auth) != 2 or auth[0] != "Bearer" or auth[1] != secret_token:
             self._set_headers(403)
@@ -33,7 +34,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            sock = socket.create_connection((host, 22), timeout=60)
+            sock = socket.create_connection((host, 22), timeout=keyscan_timeout)
             transport = paramiko.Transport(sock)
             transport.get_security_options().key_types = [key_type]
             transport.start_client()
@@ -48,6 +49,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         except:
             self._set_headers(500)
             self.wfile.write(json.dumps({'body': 'Internal Server Error'}).encode())
+        finally:
+            sock.shutdown()
+            sock.close()
 
 
 def run(server_class=HTTPServer, handler_class=RequestHandler):
