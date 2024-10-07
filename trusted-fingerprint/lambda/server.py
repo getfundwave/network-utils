@@ -1,6 +1,7 @@
 import paramiko
 import json
 import os
+import socket
 
 def lambda_handler(event, context):
     try:
@@ -24,9 +25,10 @@ def lambda_handler(event, context):
                 'body': 'Forbidden'
             }
         
-        transport = paramiko.Transport(host)
+        sock = socket.create_connection((host, 22), timeout=60)
+        transport = paramiko.Transport(sock)
         transport.get_security_options().key_types = [key_type]
-        transport.connect()
+        transport.start_client()
         
         key = transport.get_remote_server_key()
         key_body = key.get_base64()
