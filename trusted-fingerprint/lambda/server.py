@@ -50,5 +50,4 @@ def lambda_handler(event, context):
             'body': 'Internal Server Error '
         }
     finally:
-        sock.shutdown()
         sock.close()
