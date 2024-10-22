@@ -1,4 +1,5 @@
 import paramiko
+import socket
 import json
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -25,6 +26,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         key_type = event_body['KeyType']
 
         secret_token = os.environ['SECRET_TOKEN']
+        try:
+            keyscan_timeout = os.environ['KEYSCAN_TIMEOUT']
+        except:
+            keyscan_timeout = 60
 
         if len(auth) != 2 or auth[0] != "Bearer" or auth[1] != secret_token:
             self._set_headers(403)
@@ -32,9 +37,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            transport = paramiko.Transport(host)
+            sock = socket.create_connection((host, 22), timeout=keyscan_timeout)
+            transport = paramiko.Transport(sock)
             transport.get_security_options().key_types = [key_type]
-            transport.connect()
+            transport.start_client()
 
             key = transport.get_remote_server_key()
             key_body = key.get_base64()
@@ -46,6 +52,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         except:
             self._set_headers(500)
             self.wfile.write(json.dumps({'body': 'Internal Server Error'}).encode())
+        finally:
+            sock.close()
 
 
 def run(server_class=HTTPServer, handler_class=RequestHandler):
