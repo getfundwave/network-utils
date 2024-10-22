@@ -53,7 +53,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._set_headers(500)
             self.wfile.write(json.dumps({'body': 'Internal Server Error'}).encode())
         finally:
-            sock.shutdown()
             sock.close()
 
 
