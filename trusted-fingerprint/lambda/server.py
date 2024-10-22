@@ -19,7 +19,10 @@ def lambda_handler(event, context):
         key_type = event_body['KeyType']
 
         secret_token = os.environ['SECRET_TOKEN']
-        keyscan_timeout = os.environ['KEYSCAN_TIMEOUT'] or 60
+        try:
+            keyscan_timeout = os.environ['KEYSCAN_TIMEOUT']
+        except:
+            keyscan_timeout = 60
 
         if len(auth) != 2 or auth[0] != "Bearer" or auth[1] != secret_token:
             return {
