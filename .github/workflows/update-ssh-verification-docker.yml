@@ -27,7 +27,7 @@ jobs:
         with:
           role-to-assume: ${{secrets.AWS_SSM_SSH_ROLE_ARN}}
           role-session-name: UpdateTrustedFingerprintDockerSession
-          aws-region: ${{secrets.CLOUDFLARED_REGION}}
+          aws-region: ${{secrets.TRUSTED_FINGERPRINT_SERVER_REGION}}
 
       - name: setup ssh
         run: |
