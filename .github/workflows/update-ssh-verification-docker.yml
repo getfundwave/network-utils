@@ -1,5 +1,5 @@
 
-name: Update SSH Verification Lambda on file change
+name: Update SSH Verification Docker on file change
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
              --instance-os-user "ec2-user" \
              --instance-id "${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}}" \
              --ssh-public-key "$(cat $HOMEDIR/.ssh/id_ed25519.pub)"
-          zip -rq trusted-fingerprint.zip ./trusted-fingerprint
+          zip -rq trusted-fingerprint.zip ./trusted-fingerprint/docker
           scp ./trusted-fingerprint.zip ${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}}:/opt/cloudflared
           ssh -T ${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}} "cd /opt/cloudflared || exit 1;
           unzip -oq trusted-fingerprint.zip;
