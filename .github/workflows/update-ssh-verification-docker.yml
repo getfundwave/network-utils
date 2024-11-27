@@ -47,9 +47,10 @@ jobs:
              --instance-os-user "ec2-user" \
              --instance-id "${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}}" \
              --ssh-public-key "$(cat $HOMEDIR/.ssh/id_ed25519.pub)"
-          zip -rq trusted-fingerprint.zip ./trusted-fingerprint/docker
-          scp ./trusted-fingerprint.zip ${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}}:/opt/cloudflared
-          ssh -T ${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}} "cd /opt/cloudflared || exit 1;
+          (cd ./trusted-fingerprint/docker && zip -rq trusted-fingerprint.zip ./* && mv ./trusted-fingerprint.zip ../..)
+          scp ./trusted-fingerprint.zip ${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}}:/opt/cloudflared/trusted-fingerprint
+          ssh -T ${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}} "cd /opt/cloudflared/trusted-fingerprint || exit 1;
           unzip -oq trusted-fingerprint.zip;
+          cd ..
           docker compose down trusted-fingerprint && docker compose up -d trusted-fingerprint;
           " && echo "Deployment success"
