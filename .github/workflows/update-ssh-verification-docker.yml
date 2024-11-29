@@ -47,6 +47,4 @@ jobs:
              --instance-os-user "deployuser" \
              --instance-id "${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}}" \
              --ssh-public-key "$(cat $HOMEDIR/.ssh/id_ed25519.pub)"
-          (cd ./trusted-fingerprint/docker && zip -rq trusted-fingerprint.zip ./* && mv ./trusted-fingerprint.zip ../..)
-          scp ./trusted-fingerprint.zip ${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}}:/opt/server/trusted-fingerprint
           ssh -T deployuser@${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}} "cd /opt/server && bash run.sh" && echo "Deployment success"
