@@ -49,4 +49,4 @@ jobs:
              --ssh-public-key "$(cat $HOMEDIR/.ssh/id_ed25519.pub)"
           (cd ./trusted-fingerprint/docker && zip -rq trusted-fingerprint.zip ./* && mv ./trusted-fingerprint.zip ../..)
           scp ./trusted-fingerprint.zip ${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}}:/opt/server/trusted-fingerprint
-          ssh -T ${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}} "bash run.sh" && echo "Deployment success"
+          ssh -T deployuser@${{secrets.TRUSTED_FINGERPRINT_INSTANCE_ID}} "bash run.sh" && echo "Deployment success"
