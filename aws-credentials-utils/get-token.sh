@@ -5,8 +5,8 @@ DEVICE=$2
 PROFILE=${3:-'default'}
 
 if [ -z "$TOKEN" ] || [ -z "$DEVICE" ]; then
-    echo "Usage [MFA-TOKEN] [ MFA DEVICE ] [ PROFILE (optional) ] "
-    exit
+  echo "Usage [MFA-TOKEN] [ MFA DEVICE ] [ PROFILE (optional) ] "
+  exit
 fi
 
 test -f "$HOME/.aws/credentials" && sed -i 's/get-credentials '$PROFILE'/get-credentials creds'$PROFILE' notoken/' ~/.aws/credentials
@@ -19,6 +19,12 @@ SECRET_ACCESS_KEY=$(echo "$CREDS" | jq '.Credentials.SecretAccessKey' | tr -d '"
 SESSION_TOKEN=$(echo "$CREDS" | jq '.Credentials.SessionToken' | tr -d '"')
 
 CREDENTIALS="$ACCESS_KEY:$SECRET_ACCESS_KEY:$SESSION_TOKEN"
+
+if [ $(uname -o) == "GNU/Linux" ]; then
+  printf $CREDENTIALS | secret-tool store --label="AWS Account Access Key-Pair $PROFILE" provider aws profile "$PROFILE"
+elif [ $(uname -o) == "Darwin" ]; then
+  security add-generic-password -s "AWS Account Access Key-Pair $PROFILE" -a $PROFILE -w $CREDENTIALS
+fi 
 
 echo "$CREDENTIALS" | secret-tool store --label="AWS Account Access Key-Pair $PROFILE" provider aws profile "$PROFILE"
 echo "Credentials set"
