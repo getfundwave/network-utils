@@ -49,12 +49,6 @@ chmod +x "$HOME/.local/bin/get-credentials"
 cp ./get-token.sh "$HOME/.local/bin/get-token" || exit
 chmod +x "$HOME/.local/bin/get-token"
 
-# Getting mfa device configured by user on the console
-DEVICE=$(aws iam list-virtual-mfa-devices --query "VirtualMFADevices[?User.UserName=='$AWS_USERNAME'].SerialNumber" --output text --profile "$PROFILE")
-
-${SED_CMD} "s|DEVICE=.*|DEVICE=$DEVICE|" ~/.local/bin/get-token
-${SED_CMD} "s/<profile>/$PROFILE/" ~/.local/bin/get-token
-
 # Adding .local/bin to user's PATH
 echo "Adding ~/.local/bin to PATH"
 if [ -f "$HOME/.bashrc" ]; then
@@ -66,6 +60,14 @@ if [ -f "$HOME/.zshrc" ]; then
     echo "export PATH=\$HOME/.local/bin:\$PATH" >> "$HOME/.zshrc"
     echo "export AWS_DEFAULT_PROFILE=$PROFILE" >> "$HOME/.zshrc"
 fi
+
+export PATH=$HOME/.local/bin:$PATH
+
+# Getting mfa device configured by user on the console
+DEVICE=$(aws iam list-virtual-mfa-devices --query "VirtualMFADevices[?User.UserName=='$AWS_USERNAME'].SerialNumber" --output text --profile "$PROFILE")
+
+${SED_CMD} "s|DEVICE=.*|DEVICE=$DEVICE|" ~/.local/bin/get-token
+${SED_CMD} "s/<profile>/$PROFILE/" ~/.local/bin/get-token
 
 # Final steps
 ${SED_CMD} "s/get-credentials creds$PROFILE notoken/get-credentials $PROFILE/" "$HOME/.aws/credentials"
