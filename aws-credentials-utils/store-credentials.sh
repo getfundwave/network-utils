@@ -13,7 +13,7 @@ then
     printf $CREDENTIALS | secret-tool store --label="AWS Account Access Key-Pair $PROFILE" provider aws profile "creds$PROFILE"
 elif [ $(uname -o) == "Darwin" ] 
 then
-    security add-generic-password -s "AWS Account Access Key-Pair $PROFILE" -a creds$PROFILE -w $CREDENTIALS
+    security add-generic-password -s "AWS Account Access Key-Pair creds$PROFILE" -a creds$PROFILE -w $CREDENTIALS
 fi 
 
 printf "\nDone\n"

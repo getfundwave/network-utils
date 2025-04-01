@@ -1,6 +1,7 @@
 aws-credentials-utils lets you store your AWS ACCESS_KEY_ID and SECRET_ACCESS_KEY in a secure storage depending on your OS. 
 
 ## Prerequisites
+The below scripts should be followed after you have setup MFA in your AWS console
 #### Linux:
 1. gnome-keyring
 2. libsecret-tools
