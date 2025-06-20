@@ -1,0 +1,31 @@
+name: Update Private CA Lambda on push
+
+on:
+  push:
+    paths:
+      - private-ca/server/
+      - .github/workflows/update-private-ca-lambda.yml
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  update-lambda:
+    runs-on: "ubuntu-22.04"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_SSH_UPDATE_ROLE_ARN }}
+          role-session-name: UpdatePrivateCALambda
+
+      - name: Run update-server-on-lambda.sh
+        run: |
+          cd private-ca/
+          bash update-server-on-lambda.sh
