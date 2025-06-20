@@ -1,14 +1,20 @@
 import fs from 'fs';
 import child_process from 'child_process';
 import util from 'util';
+import { getPublicIpAddress } from './get-public-ip-address.js';
 
 const exec = util.promisify(child_process.exec);
 
-export const signHostSSHCertificate = async (callerIdentity, secret, certPubkey, publicIp) => {
+export const signHostSSHCertificate = async (callerIdentity, secret, certPubkey, awsEC2Region) => {
 
   const arn = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Arn;
-  const roleName = arn.match(/\/([^/]+)$/)?.[1];
-  
+  const instanceId = arn.match(/\/([^/]+)$/)?.[1];
+
+  const publicIp = await getPublicIpAddress({
+      awsEC2Region: awsEC2Region,
+      instanceId: instanceId
+  });
+
   const caKeyPath = "/tmp/host_ca";
   const publicKeyName = "ssh_host_rsa_key";
   const publicKeyPath = "/tmp/" + publicKeyName + ".pub";
@@ -22,7 +28,7 @@ export const signHostSSHCertificate = async (callerIdentity, secret, certPubkey,
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 
-  ({ stdout, stderr } = await exec(`ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I host_${roleName} -h -n ${publicIp} -V +1d ${publicKeyPath}`));
+  ({ stdout, stderr } = await exec(`ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I host_${instanceId} -h -n ${publicIp} -V +1d ${publicKeyPath}`));
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 

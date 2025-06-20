@@ -1,4 +1,6 @@
 #!/bin/bash
+set -eo pipefail
+trap 'echo "Error occurred on line $LINENO. Exiting."; exit 1;' ERR
 
 CA_ACTION=${1:-$CA_ACTION}
 CA_URL=${2:-$CA_URL}
@@ -8,6 +10,7 @@ USER_SSH_DIR=${5:-"/home/$USER/.ssh"}
 USER_AWS_DIR=${6:-"/home/$USER/.aws"}
 SYSTEM_SSH_DIR=${7:-"/etc/ssh"}
 AWS_STS_REGION=${8:-"ap-southeast-1"}
+AWS_EC2_REGION=${9:-"us-west-2"}
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 [[ $? -ne 0 ]] && { echo "Python not installed."; exit 1; }
@@ -30,7 +33,6 @@ get_aws_credentials() {
 
         INSTANCE_ROLE_NAME=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/)
         TEMP_CREDS=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/$INSTANCE_ROLE_NAME)
-        PUBLIC_IP=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
         
     elif [[ $method == "client" ]]; then
         if is_mfa_enabled; then
@@ -133,16 +135,31 @@ pip install -q --upgrade boto3
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 
 # Auth Headers
-output=$($PYTHON_EXEC aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_STS_REGION)
-auth_header=$(echo $output | jq -r ".Authorization")
-date=$(echo $output | jq -r ".Date")
+output=$($PYTHON_EXEC aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_STS_REGION) || {
+    echo "Failed to generate auth header. Check aws-auth-header.py script.";
+    exit 1;
+}
+auth_header=$(echo "$output" | jq -er ".Authorization") || {
+    echo "Failed to parse Authorization from auth-header output.";
+    exit 1;
+}
+date=$(echo "$output" | jq -er ".Date") || {
+    echo "Failed to parse Date from auth-header output.";
+    exit 1;
+}
 
-EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"${auth_header}\",\"sessionToken\":\"${SESSION_TOKEN}\"},\"certPubkey\":\"${CERT_PUBKEY}\",\"action\":\"${CA_ACTION}\",\"awsSTSRegion\":\"${AWS_STS_REGION}\",\"publicIp\":\"${PUBLIC_IP}\"}")
+EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"${auth_header}\",\"sessionToken\":\"${SESSION_TOKEN}\"},\"certPubkey\":\"${CERT_PUBKEY}\",\"action\":\"${CA_ACTION}\",\"awsSTSRegion\":\"${AWS_STS_REGION}\",\"awsEC2Region\":\"${AWS_EC2_REGION}\"}")
 
 
 if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
-    LAMBDA_RESPONSE=$(curl "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON")
-    ENCODED_CERTIFICATE=$(echo $LAMBDA_RESPONSE | jq -r ".certificate")
+    LAMBDA_RESPONSE=$(curl -sf "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON") || {
+        echo "Failed to contact Lambda CA URL. Ensure the URL is correct and the server is running.";
+        exit 1;
+    }
+    ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
+        echo "Certificate not found in Lambda response. Aborting.";
+        exit 1;
+    }
     CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)
     HOST_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"host_ca.pub\"" | base64 -d)
 
@@ -157,13 +174,25 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
 # sudo access is required to generate host certificate
 elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
-    LAMBDA_RESPONSE=$(curl "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON")
-    ENCODED_CERTIFICATE=$(echo $LAMBDA_RESPONSE | jq -r ".certificate")
+    LAMBDA_RESPONSE=$(curl -sf "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON") || {
+        echo "Failed to contact Lambda CA URL. Ensure the URL is correct and the server is running.";
+        exit 1;
+    }
+    echo "res: $LAMBDA_RESPONSE"
+    ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
+        echo "Certificate not found in Lambda response. Aborting.";
+        exit 1;
+    }
     CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)    
     USER_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"user_ca.pub\"" | base64 -d)
 
-    sh -c "echo $CERTIFICATE > ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
-    echo "Certificate written to ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
+    if [[ -n "$CERTIFICATE" ]]; then
+        echo "$CERTIFICATE" > "${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
+        echo "Certificate written to ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
+    else
+        echo "Empty certificate received. Not writing to disk."
+        exit 1
+    fi
 
     test -f ${SYSTEM_SSH_DIR}/user_ca.pub || echo $USER_CA_PUBKEY > ${SYSTEM_SSH_DIR}/user_ca.pub
 

@@ -17,7 +17,7 @@ export const handler = async (event) => {
   // action
   switch(event.action) {
     case "generateHostSSHCert":
-      const hostSSHCert = await signHostSSHCertificate(callerIdentity, secret, event.certPubkey, event.publicIp);
+      const hostSSHCert = await signHostSSHCertificate(callerIdentity, secret, event.certPubkey, event.awsEC2Region);
       return {
         statusCode: 200,
         body: "{\"certificate\" : \""+Buffer.from(hostSSHCert).toString('base64')+"\", \"user_ca.pub\": \""+secret["user_ca.pub"]+"\"}"
