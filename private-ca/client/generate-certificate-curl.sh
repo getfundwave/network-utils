@@ -74,8 +74,8 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
     if test -f ${USER_SSH_DIR}/id_rsa-cert.pub; then
         # Client SSH Certificate already exists
-        current_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S") 
-        certificate_expiration_timestamp=$(ssh-keygen -Lf ${USER_SSH_DIR}/id_rsa-cert.pub | awk '/Valid:/{print $NF}')
+        current_timestamp=$(TZ=UTC date -u +"%Y-%m-%dT%H:%M:%S") 
+        certificate_expiration_timestamp=$(TZ=UTC ssh-keygen -Lf ${USER_SSH_DIR}/id_rsa-cert.pub | awk '/Valid:/{print $NF}')
 
         if [[ $certificate_expiration_timestamp > $current_timestamp ]]; then
             # Certificate is valid
@@ -103,8 +103,8 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
     
     if test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub; then
         # Host SSH Certificate already exists
-        current_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S") 
-        certificate_expiration_timestamp=$(ssh-keygen -Lf ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub | awk '/Valid:/{print $NF}')
+        current_timestamp=$(TZ=UTC date -u +"%Y-%m-%dT%H:%M:%S") 
+        certificate_expiration_timestamp=$(TZ=UTC ssh-keygen -Lf ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub | awk '/Valid:/{print $NF}')
 
         if [[ $certificate_expiration_timestamp > $current_timestamp ]]; then
             # Certificate is valid 
