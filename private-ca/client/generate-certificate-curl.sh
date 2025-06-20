@@ -96,6 +96,10 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         echo -e "\nError: generateHostSSHCert is not allowed in client environment.\nHost certificate generation requires host/server environment.\n"
         exit 1
     fi
+    if [ "$EUID" -ne 0 ]; then
+        echo "Run this script with sudo or as root for generating host certificate."
+        exit 1
+    fi
     
     if test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub; then
         # Host SSH Certificate already exists
@@ -178,7 +182,6 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         echo "Failed to contact Lambda CA URL. Ensure the URL is correct and the server is running.";
         exit 1;
     }
-    echo "res: $LAMBDA_RESPONSE"
     ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
         echo "Certificate not found in Lambda response. Aborting.";
         exit 1;
