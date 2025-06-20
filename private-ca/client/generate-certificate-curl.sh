@@ -49,7 +49,7 @@ get_aws_credentials() {
 
     ACCESS_KEY_ID=$(echo $TEMP_CREDS | jq -r ".AccessKeyId")
     SECRET_ACCESS_KEY=$(echo $TEMP_CREDS | jq -r ".SecretAccessKey")
-    SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Token // .SessionToken // .Sessiontoken")
+    SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".SessionToken")
 }
 
 # Check for options
