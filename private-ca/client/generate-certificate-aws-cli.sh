@@ -14,7 +14,7 @@ AWS_STS_REGION=${9:-"ap-southeast-1"}
 AWS_EC2_REGION=${10:-"us-west-2"}
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
-[[ $? -ne 0 ]] && { echo "Python not installed."; exit 1; }
+[[ $? -ne 0 ]] && { echo "Python binary not found."; exit 1; }
 
 is_mfa_enabled() {
   grep -q 'get-credentials' ${USER_AWS_DIR}/credentials

@@ -2,6 +2,8 @@ name: Update Private CA Lambda on push
 
 on:
   push:
+    branches:
+      - main
     paths:
       - private-ca/server/
       - .github/workflows/update-private-ca-lambda.yml

@@ -1,6 +1,5 @@
 import sys
 from datetime import datetime
-import boto3
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
