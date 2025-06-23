@@ -44,12 +44,12 @@ get_aws_credentials() {
             TEMP_CREDS=$(aws sts get-session-token --profile $AWS_PROFILE | jq -r ".Credentials")
         fi
     else 
-        echo "Invalid environment"; exit 1;
+        echo "Invalid environment provided. Allowed values are 'host' and 'client'"; exit 1;
     fi
 
     ACCESS_KEY_ID=$(echo $TEMP_CREDS | jq -r ".AccessKeyId")
     SECRET_ACCESS_KEY=$(echo $TEMP_CREDS | jq -r ".SecretAccessKey")
-    SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".SessionToken")
+    SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Token // .SessionToken // .Sessiontoken")
 }
 
 # Check for options

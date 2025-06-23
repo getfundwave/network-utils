@@ -2,7 +2,7 @@ import { signHostSSHCertificate } from './generate-host-ssh-cert.js';
 import { signClientSSHCertificate } from './generate-client-ssh-cert.js';
 import { getCallerIdentity } from './get-caller-identity.js';
 import { getSecret } from './secret-manager-utils.js';
-const AWS_SCRTS_REGION = process.env.AWS_SCRTS_REGION;
+const AWS_SECRETS_REGION = process.env.AWS_SECRETS_REGION;
 
 export const handler = async (event) => {
   
@@ -12,7 +12,7 @@ export const handler = async (event) => {
   const callerIdentity = await getCallerIdentity(event);
 
   // secret
-  const secret = await getSecret(AWS_SCRTS_REGION, 'privateCA');
+  const secret = await getSecret(AWS_SECRETS_REGION, 'privateCA');
   
   // action
   switch(event.action) {

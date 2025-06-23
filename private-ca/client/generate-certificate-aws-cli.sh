@@ -45,12 +45,12 @@ get_aws_credentials() {
             TEMP_CREDS=$(aws sts get-session-token --profile $AWS_PROFILE | jq -r ".Credentials")
         fi
     else 
-        echo "Invalid environment"; exit 1;
+        echo "echo "Invalid environment provided. Allowed values are 'host' and 'client'"; exit 1; t"; exit 1;
     fi
 
     ACCESS_KEY_ID=$(echo $TEMP_CREDS | jq -r ".AccessKeyId")
     SECRET_ACCESS_KEY=$(echo $TEMP_CREDS | jq -r ".SecretAccessKey")
-    SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".SessionToken")
+    SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Token // .SessionToken // .Sessiontoken")
 }
 
 # Check for options
@@ -59,18 +59,17 @@ while getopts ":h" option; do
       h)
          echo "Usage: bash generate-certificate-aws-cli.sh [ACTION] [ENVIRONMENT] [AWS PROFILE] [USER SSH DIR] [USER AWS DIR] [SYSTEM SSH DIR] [AWS STS REGION]"
          echo ""
+         echo "Actions:"
+         echo "  generateHostSSHCert     Generates SSH Certificate for Host"
+         echo "  generateClientSSHCert   Generates SSH Certificate for Client"
+         echo ""
          echo "Parameters:"
-         echo "  CA_ACTION               Action to perform (default: generateHostSSHCert)"
          echo "  ENVIRONMENT             Environment to use (default: client)"
          echo "  AWS PROFILE             AWS profile to use (default: default)"
          echo "  USER SSH DIR            Path to user's SSH directory (default: /home/$USER/.ssh)"
          echo "  USER AWS DIR            Path to user's AWS directory (default: /home/$USER/.aws)"
          echo "  SYSTEM SSH DIR          Path to system's SSH directory (default: /etc/ssh)"
          echo "  AWS STS REGION          AWS region for STS operations (default: ap-southeast-1)"
-         echo ""    
-         echo "CA_ACTION:"
-         echo "  generateHostSSHCert     Generates SSH Certificate for Host"
-         echo "  generateClientSSHCert   Generates SSH Certificate for Client"
          exit;;
       *)
          echo "Error: Invalid option"

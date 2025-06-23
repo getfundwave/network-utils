@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     request_parameters = 'Action=GetCallerIdentity&Version=2011-06-15'
     request_headers = {
         'Host': sts_host,
-        'X-Amz-Date': datetime.now().strftime('%Y%m%dT%H%M%SZ'),
+        'X-Amz-Date': datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ'),
         'Aud': 'FundwaveCA'
     }
     request = AWSRequest(method="POST", url="/", data=request_parameters, headers=request_headers)
