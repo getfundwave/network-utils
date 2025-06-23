@@ -1,6 +1,6 @@
 FROM alpine:3.18.3
 
-RUN apk add bash curl unzip groff jq python3 openssh openssl
+RUN apk add bash curl jq python3 openssh
 
 WORKDIR /app
 

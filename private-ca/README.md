@@ -22,7 +22,7 @@ Note: Once the lambda is deployed you will need to manually add an environment v
 
 ## Prerequisites for usage
 
-### Running via Docker
+### Running via Docker (for host machines only)
 
 - Docker
 
