@@ -139,10 +139,10 @@ fi
 # Temporary Credentials
 get_aws_credentials $ENVIRONMENT
 
-if [ ! -d "env" ]; then
-  $PYTHON_EXEC -m venv env
+if [ ! -d "private-ca-client-env" ]; then
+  $PYTHON_EXEC -m venv private-ca-client-env
 fi
-source env/bin/activate
+source private-ca-client-env/bin/activate
 pip install -q --upgrade boto3
 
 # Update PYTHON_EXEC to use the Python executable from the activated virtual environment
