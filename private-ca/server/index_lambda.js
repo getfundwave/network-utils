@@ -35,13 +35,19 @@ export const handler = async (event) => {
         const hostSSHCert = await signHostSSHCertificate(callerIdentity, secret, event.certPubkey, event.awsEC2Region);
         return {
           statusCode: 200,
-          body: "{\"certificate\" : \""+Buffer.from(hostSSHCert).toString('base64')+"\", \"user_ca.pub\": \""+secret["user_ca.pub"]+"\"}"
+          body: JSON.stringify({
+            "certificate": Buffer.from(hostSSHCert).toString('base64'),
+            "user_ca.pub": secret["user_ca.pub"]
+          })
         };
       case "generateClientSSHCert":
         const clientSSHCert = await signClientSSHCertificate(callerIdentity, secret, event.certPubkey);
         return {
           statusCode: 200,
-          body: "{\"certificate\" : \""+Buffer.from(clientSSHCert).toString('base64')+"\", \"host_ca.pub\": \""+secret["host_ca.pub"]+"\"}"
+          body: JSON.stringify({
+            "certificate": Buffer.from(clientSSHCert).toString('base64'),
+            "host_ca.pub": secret["host_ca.pub"]
+          })
         };
       default:
         console.log("Invalid Action")
