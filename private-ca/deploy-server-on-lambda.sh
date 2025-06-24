@@ -13,19 +13,12 @@ AWS_PROFILE=${7:-"default"}
 ssh-keygen -t rsa -b 4096 -f host_ca -C host_ca -N ""
 ssh-keygen -t rsa -b 4096 -f user_ca -C user_ca -N ""
 
-openssl genrsa -out key.pem 2048
-openssl rsa -in key.pem -outform PEM -pubout -out public.pem
-openssl req -new -x509 -key key.pem -out root.crt -days 365 -subj "/C=US/ST=California/L=YourCity/O=Fundwave/OU=Fundwave/CN=FundwaveCA"
-
 HOST_CA_PRIVATE_KEY=$(cat host_ca | base64 | tr -d \\n)
 HOST_CA_PUBLIC_KEY=$(cat host_ca.pub | base64 | tr -d \\n)
 USER_CA_PRIVATE_KEY=$(cat user_ca | base64 | tr -d \\n)
 USER_CA_PUBLIC_KEY=$(cat user_ca.pub | base64 | tr -d \\n)
-ROOT_SSL_PRIVATE_KEY=$(cat key.pem | base64 | tr -d \\n)
-ROOT_SSL_PUBLIC_KEY=$(cat public.pem | base64 | tr -d \\n)
-ROOT_SSL_CERT=$(cat root.crt | base64 | tr -d \\n)
 
-echo "{\"host_ca\": \"${HOST_CA_PRIVATE_KEY}\", \"host_ca.pub\": \"${HOST_CA_PUBLIC_KEY}\", \"user_ca\": \"${USER_CA_PRIVATE_KEY}\",\"user_ca.pub\": \"${USER_CA_PUBLIC_KEY}\",\"root_ssl_private_key\": \"${ROOT_SSL_PRIVATE_KEY}\",\"root_ssl_public_key\": \"${ROOT_SSL_PUBLIC_KEY}\", \"rootX509cert\": \"${ROOT_SSL_CERT}\"}" | jq . > secret.json
+echo "{\"host_ca\": \"${HOST_CA_PRIVATE_KEY}\", \"host_ca.pub\": \"${HOST_CA_PUBLIC_KEY}\", \"user_ca\": \"${USER_CA_PRIVATE_KEY}\",\"user_ca.pub\": \"${USER_CA_PUBLIC_KEY}\"}" | jq . > secret.json
 
 # Create Secret
 SECRET_ARN=$(aws secretsmanager create-secret \
@@ -36,7 +29,7 @@ SECRET_ARN=$(aws secretsmanager create-secret \
      | jq ".ARN" | tr -d '"')
 
 # Clean up
-rm host_ca host_ca.pub user_ca user_ca.pub key.pem public.pem root.crt secret.json
+rm host_ca host_ca.pub user_ca user_ca.pub secret.json
 ############################################
 
 ################### Role ###################
