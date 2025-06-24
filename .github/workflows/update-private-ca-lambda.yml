@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - private-ca/server/
+      - private-ca/server/**
       - .github/workflows/update-private-ca-lambda.yml
 
 permissions:
