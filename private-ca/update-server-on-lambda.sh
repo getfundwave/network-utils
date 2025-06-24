@@ -10,6 +10,6 @@ cd ..
 
 aws lambda update-function-code \
     --function-name $FUNCTION_NAME \
-    --zip-file fileb://lambda.zip --region $REGION --profile $PROFILE 1>/dev/null 2>/dev/stderr
+    --zip-file fileb://lambda.zip --region $REGION --profile $PROFILE >/dev/null 2>&1
 
 rm -r lambda.zip
