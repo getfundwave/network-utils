@@ -123,7 +123,7 @@ else
     echo "Possible actions include:"
     echo " generateHostSSHCert: Generates SSH Certificate for Host"
     echo " generateClientSSHCert: Generates SSH Certificate for Client"
-    exit;
+    exit 1;
 fi
 
 get_aws_credentials $ENVIRONMENT
