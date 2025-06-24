@@ -10,10 +10,7 @@ export const signHostSSHCertificate = async (callerIdentity, secret, certPubkey,
   const arn = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Arn;
   const instanceId = arn.match(/\/([^/]+)$/)?.[1];
 
-  const publicIp = await getPublicIpAddress({
-      awsEC2Region: awsEC2Region,
-      instanceId: instanceId
-  });
+  const publicIp = await getPublicIpAddress(awsEC2Region, instanceId);
 
   const caKeyPath = "/tmp/host_ca";
   const publicKeyName = "ssh_host_rsa_key";

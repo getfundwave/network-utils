@@ -1,9 +1,6 @@
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 
-export const getPublicIpAddress = async (event) => {
-  const region = event.awsEC2Region;
-  const instanceId = event.instanceId;
-
+export const getPublicIpAddress = async (region, instanceId) => {
   const client = new EC2Client({ region });
 
   const command = new DescribeInstancesCommand({
