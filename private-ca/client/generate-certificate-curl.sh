@@ -172,7 +172,11 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
     [[ -f "${USER_SSH_DIR}/known_hosts" ]] || touch "${USER_SSH_DIR}/known_hosts"
 
+    # Add host CA public key to known_hosts file if it doesn't exist
     if [[ $(grep -q "@cert-authority" "${USER_SSH_DIR}/known_hosts"; echo $?) -ne 0 ]]; then
+        # @cert-authority tells ssh to trust the host CA public key
+        # * means all hosts (wildcard) (you can also specify a list of comma separated hostnames)
+        # ${HOST_CA_PUBKEY} is the host CA public key that was used to sign the host certificate
         echo "@cert-authority * ${HOST_CA_PUBKEY}" >> ${USER_SSH_DIR}/known_hosts
     fi
 
