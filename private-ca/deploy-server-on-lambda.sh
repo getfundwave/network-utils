@@ -67,7 +67,7 @@ rm Trust-Policy.json Policy.json
 # Create OpenSSH layer
 sudo docker run --rm -v $(pwd)/openssh-layer:/lambda/opt lambci/yumda:2 yum install -y openssh
 cd openssh-layer
-sudo zip -yr ./openssh-layer.zip . > /dev/null
+sudo zip -qry ./openssh-layer.zip . > /dev/null
 LAYER_ARN=$(aws lambda publish-layer-version \
     --layer-name $LAYER_NAME \
     --zip-file fileb://openssh-layer.zip \
@@ -86,7 +86,7 @@ sudo rm -r openssh-layer/
 # Create lambda function
 cd server
 npm i
-zip -r ./lambda.zip .
+zip -qr ./lambda.zip .
 mv lambda.zip ../
 cd ..
 
