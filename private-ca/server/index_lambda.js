@@ -18,9 +18,16 @@ export const handler = async (event) => {
 
     // auth
     const callerIdentity = await getCallerIdentity(event);
+    const accountId = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Account;
 
     // secret
-    const secret = await getSecret(AWS_SECRETS_REGION, 'privateCA');
+    const secret = await getSecret(AWS_SECRETS_REGION, 'privateCA', accountId);
+    if (!secret) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ error: 'This AWS account is not configured to use this service'}),
+      };
+    }
 
     // action
     switch (event.action) {
