@@ -1,8 +1,6 @@
 #!/bin/bash
 
 trap 'rm -f *.json' EXIT
-set -eo pipefail
-trap 'echo "Error occurred on line $LINENO. Exiting."; exit 1;' ERR
 
 CA_ACTION=${1:-"generateHostSSHCert"}
 ENVIRONMENT=${2:-"client"}

@@ -6,6 +6,6 @@ await build({
   platform: 'node',
   target: 'node18',
   outfile: 'dist/index_lambda.js',
-  format: 'esm',
+  format: 'cjs',
   external: [],
 });

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 FUNCTION_NAME=${1:-'privateCA'}
 REGION=${2:-'ap-southeast-1'}
 PROFILE=${3:-'default'}

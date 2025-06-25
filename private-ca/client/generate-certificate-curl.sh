@@ -1,6 +1,4 @@
 #!/bin/bash
-set -eo pipefail
-trap 'echo "Error occurred on line $LINENO. Exiting."; exit 1;' ERR
 
 CA_ACTION=${1:-$CA_ACTION}
 CA_URL=${2:-$CA_URL}

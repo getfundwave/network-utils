@@ -1,13 +1,16 @@
 #!/bin/bash
+trap 'rm host_ca host_ca.pub user_ca user_ca.pub secret.json' EXIT
 
-SECRET_NAME=${1:-"privateCA"}
+SECRET_PREFIX=${1:-"privateCA"}
 ROLE_NAME=${2:-"privateCALambdaRole"}
 POLICY_NAME=${3:-"PrivateCAPolicy"}
 LAYER_NAME=${4:-"openssh"}
 FUNCTION_NAME=${5:-"privateCA"}
-AWS_REGION=${6:-"ap-southeast-1"}
-AWS_PROFILE=${7:-"default"}
+AWS_REGION=${6:-"ap-southeast-12"}
+AWS_PROFILE=${7:-"harshit-root"}
 ################## Secret ##################
+
+ACCOUNT_ID=$(aws sts get-caller-identity --profile $AWS_PROFILE | jq -r ".Account")
 
 # Generate Keys
 ssh-keygen -t rsa -b 4096 -f host_ca -C host_ca -N ""
@@ -19,6 +22,8 @@ USER_CA_PRIVATE_KEY=$(cat user_ca | base64 | tr -d \\n)
 USER_CA_PUBLIC_KEY=$(cat user_ca.pub | base64 | tr -d \\n)
 
 echo "{\"host_ca\": \"${HOST_CA_PRIVATE_KEY}\", \"host_ca.pub\": \"${HOST_CA_PUBLIC_KEY}\", \"user_ca\": \"${USER_CA_PRIVATE_KEY}\",\"user_ca.pub\": \"${USER_CA_PUBLIC_KEY}\"}" | jq . > secret.json
+
+SECRET_NAME="${SECRET_PREFIX}_${ACCOUNT_ID}_secret"
 
 # Create Secret
 SECRET_ARN=$(aws secretsmanager create-secret \
