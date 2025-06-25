@@ -8,7 +8,11 @@ const exec = util.promisify(child_process.exec);
 export const signHostSSHCertificate = async (callerIdentity, secret, certPubkey, awsEC2Region) => {
 
   const arn = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Arn;
-  const instanceId = arn.match(/\/([^/]+)$/)?.[1];
+  const match = arn.match(/\/([^/]+)$/);
+  if (!match) {
+      throw new Error(`Invalid ARN format: ${arn}`);
+  }
+  const instanceId = match[1];
 
   const publicIp = await getPublicIpAddress(awsEC2Region, instanceId);
 

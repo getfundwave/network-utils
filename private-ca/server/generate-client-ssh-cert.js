@@ -12,7 +12,11 @@ const certificatePath = "/tmp/" + publicKeyName + "-cert.pub";
 export const signClientSSHCertificate = async (callerIdentity, secret, certPubkey) => {
 
   const arn = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Arn;
-  const roleName = arn.match(/\/([^/]+)$/)?.[1];
+  const match = arn.match(/\/([^/]+)$/);
+  if (!match) {
+      throw new Error(`Invalid ARN format: ${arn}`);
+  }
+  const roleName = match[1];
   const user_ca = Buffer.from(secret.user_ca, 'base64').toString('utf-8');
 
   certPubkey = Buffer.from(certPubkey, 'base64').toString('utf-8');
