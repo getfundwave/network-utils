@@ -156,10 +156,20 @@ EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"
 
 
 if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
-    LAMBDA_RESPONSE=$(curl -sf "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON") || {
-        echo "Failed to contact Lambda CA URL. Ensure the URL is correct and the server is running.";
+    read -r STATUS_CODE LAMBDA_RESPONSE < <(
+        curl -s "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" -w "%{http_code}\n" | 
+        { 
+            response=$(cat)
+            status_code=${response: -3}
+            body=${response:0:$((${#response}-3))}
+            echo "$status_code $body"
+        }
+    )
+
+    if [[ "$STATUS_CODE" != "200" ]]; then
+        echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
         exit 1;
-    }
+    fi
     ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
         echo "Certificate not found in Lambda response. Aborting.";
         exit 1;
@@ -182,10 +192,20 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
 # sudo access is required to generate host certificate
 elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
-    LAMBDA_RESPONSE=$(curl -sf "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON") || {
-        echo "Failed to contact Lambda CA URL. Ensure the URL is correct and the server is running.";
+    read -r STATUS_CODE LAMBDA_RESPONSE < <(
+        curl -s "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" -w "%{http_code}\n" | 
+        { 
+            response=$(cat)
+            status_code=${response: -3}
+            body=${response:0:$((${#response}-3))}
+            echo "$status_code $body"
+        }
+    )
+
+    if [[ "$STATUS_CODE" != "200" ]]; then
+        echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
         exit 1;
-    }
+    fi
     ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
         echo "Certificate not found in Lambda response. Aborting.";
         exit 1;
