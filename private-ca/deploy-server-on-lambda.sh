@@ -79,7 +79,8 @@ sudo rm -r openssh-layer/
 # Create lambda function
 cd server
 npm i
-zip -qr ./lambda.zip .
+npm run build
+cd dist && zip -qr ../lambda.zip . && cd ..
 mv lambda.zip ../
 cd ..
 
@@ -102,7 +103,7 @@ aws lambda add-permission \
     --region $AWS_REGION \
     --profile $AWS_PROFILE
 
-FUNCTION_URL=$(aws lambda create-function-url-config --function-name "privateCA" --auth-type "NONE" --region $AWS_REGION --profile $AWS_PROFILE | jq -r ".FunctionUrl")
+FUNCTION_URL=$(aws lambda create-function-url-config --function-name "$FUNCTION_NAME" --auth-type "NONE" --region $AWS_REGION --profile $AWS_PROFILE | jq -r ".FunctionUrl")
 
 echo "CA deployed at URL:"
 echo "${FUNCTION_URL}"

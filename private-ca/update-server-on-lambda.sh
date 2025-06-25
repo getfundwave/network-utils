@@ -4,7 +4,8 @@ PROFILE=${3:-'default'}
 
 cd server
 npm i
-zip -qr ./lambda.zip .
+npm run build
+cd dist && zip -qr ../lambda.zip . && cd ..
 mv lambda.zip ../
 cd ..
 
