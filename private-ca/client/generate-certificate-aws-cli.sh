@@ -192,7 +192,7 @@ echo "$json_body" > event.json
 # On EC2 instances with IAM roles, credentials are fetched from instance metadata,
 # and using --profile will cause an error if ~/.aws/credentials doesn't exist.
 AWS_PROFILE_ARG=""
-if [[ -n "$AWS_PROFILE" ]] && grep -q "$AWS_PROFILE" ~/.aws/{credentials,config} 2>/dev/null; then
+if [[ -n "$AWS_PROFILE" ]] && grep -q "$AWS_PROFILE" ${USER_AWS_DIR}/{credentials,config} 2>/dev/null; then
   AWS_PROFILE_ARG="--profile $AWS_PROFILE"
 fi
 
