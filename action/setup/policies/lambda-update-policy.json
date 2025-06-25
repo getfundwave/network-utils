@@ -5,8 +5,7 @@
           "Effect": "Allow",
           "Action": [
               "lambda:UpdateFunctionCode",
-              "lambda:GetFunction",
-              "lambda:ListFunctions"
+              "lambda:GetFunction"
           ],
           "Resource": [
               "arn:aws:lambda:*:<account_id>:function:privateCA"

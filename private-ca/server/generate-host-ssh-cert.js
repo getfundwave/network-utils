@@ -29,7 +29,12 @@ export const signHostSSHCertificate = async (callerIdentity, secret, certPubkey,
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 
-  ({ stdout, stderr } = await exec(`ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I host_${instanceId} -h -n ${publicIp} -V +1d ${publicKeyPath}`));
+  (
+    { stdout, stderr } = await exec(
+      `ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I host_${instanceId} -h -n ${publicIp} -V +1d ${publicKeyPath}`
+    )
+  );
+  
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 

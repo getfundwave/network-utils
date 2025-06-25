@@ -24,7 +24,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ secrets.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_SSH_UPDATE_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_PRIVATE_CA_LAMBDA_UPDATE_ROLE }}
           role-session-name: UpdatePrivateCALambda
 
       - name: Run update-server-on-lambda.sh

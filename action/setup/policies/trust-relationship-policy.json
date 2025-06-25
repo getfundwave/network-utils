@@ -12,7 +12,7 @@
                   "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
               },
               "StringLike": {
-                  "token.actions.githubusercontent.com:sub": "repo:*/network-utils:environment:Prod"
+                  "token.actions.githubusercontent.com:sub": "repo:getfundwave/network-utils:environment:Prod"
               }
           }
       }
