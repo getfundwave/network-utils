@@ -1,4 +1,6 @@
 #!/bin/bash
+
+trap 'rm -f *.json' EXIT
 set -eo pipefail
 trap 'echo "Error occurred on line $LINENO. Exiting."; exit 1;' ERR
 
@@ -196,18 +198,33 @@ if [[ -n "$AWS_PROFILE" ]] && grep -q "$AWS_PROFILE" ${USER_AWS_DIR}/{credential
   AWS_PROFILE_ARG="--profile $AWS_PROFILE"
 fi
 
-aws lambda invoke \
+export AWS_PAGER=""
+
+INVOKE_OUTPUT=$(aws lambda invoke \
     --function-name ${CA_LAMBDA_FUNCTION_NAME} \
     --cli-binary-format raw-in-base64-out \
     --payload file://event.json \
     response.json \
     --region $LAMBDA_REGION \
-    $AWS_PROFILE_ARG
+    $AWS_PROFILE_ARG 2>&1) || {
+    echo "$INVOKE_OUTPUT"
+    echo "Lambda invocation failed"
+    exit 1
+}
 
 response_body=$(cat response.json | jq -r ".body") || {
     echo "Failed to parse response body.";
-    exit 1;
+    exit 1
 }
+status_code=$(cat response.json | jq -r ".statusCode") || {
+    echo "Failed to parse status code.";
+    exit 1
+}
+
+if [[ $status_code -ne 200 ]]; then
+    echo "CA request failed (Status: ${status_code}): ${response_body}"
+    exit 1
+fi
 
 if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
     ENCODED_CERTIFICATE=$(echo "$response_body" | jq -er ".certificate") || {
@@ -259,4 +276,3 @@ fi
 
 # Clean up
 deactivate
-rm -r *.json
