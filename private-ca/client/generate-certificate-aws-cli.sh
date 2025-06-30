@@ -44,6 +44,7 @@ get_aws_credentials() {
         else
             TEMP_CREDS=$(aws sts get-session-token --profile $AWS_PROFILE | jq -r ".Credentials")
         fi
+        AWS_PROFILE_ARG="--profile $AWS_PROFILE"
     else 
         echo "Invalid environment provided. Allowed values are 'host' and 'client'"; exit 1;
     fi
@@ -187,14 +188,6 @@ INNER_JSON=$(jq -n \
 # JSON with body as stringified JSON
 json_body=$(jq -n --arg body "$INNER_JSON" '{body: $body}')
 echo "$json_body" > event.json
-
-# Use --profile only if AWS_PROFILE is set and ~/.aws/credentials exists
-# On EC2 instances with IAM roles, credentials are fetched from instance metadata,
-# and using --profile will cause an error if ~/.aws/credentials doesn't exist.
-AWS_PROFILE_ARG=""
-if [[ -n "$AWS_PROFILE" ]] && grep -q "$AWS_PROFILE" ${USER_AWS_DIR}/{credentials,config} 2>/dev/null; then
-  AWS_PROFILE_ARG="--profile $AWS_PROFILE"
-fi
 
 export AWS_PAGER=""
 
