@@ -27,9 +27,14 @@ export const signClientSSHCertificate = async (callerIdentity, secret, certPubke
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 
+  const principalList = [
+    roleName,
+    ...secret[roleName].split(',').map(s => s.trim())
+  ].join(',');
+
   (
     { stdout, stderr } = await exec(
-    `ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I client_${roleName} -n ${roleName} -V +${validityInDays}d ${publicKeyPath}`
+    `ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I client_${roleName} -n ${principalList} -V +${validityInDays}d ${publicKeyPath}`
     )
   );
 
