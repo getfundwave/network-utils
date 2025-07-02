@@ -2,8 +2,10 @@ import fs from 'fs';
 import child_process from 'child_process';
 import util from 'util';
 import { getPublicIpAddress } from './get-public-ip-address.js';
+import formatDate from './format-date.js';
 
 const exec = util.promisify(child_process.exec);
+const validityInDays = process.env.validityInDays ?? 1;
 
 export const signHostSSHCertificate = async (callerIdentity, secret, certPubkey, awsEC2Region) => {
 
@@ -29,9 +31,17 @@ export const signHostSSHCertificate = async (callerIdentity, secret, certPubkey,
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 
+  const now = new Date();
+  const validFrom = formatDate(now);
+  
+  const validUntil = new Date(now.getTime() + (validityInDays * 24 * 60 * 60 * 1000));
+  const validTo = formatDate(validUntil);
+
+  const validityPeriod = `${validFrom}:${validTo}`;
+
   (
     { stdout, stderr } = await exec(
-      `ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I host_${instanceId} -h -n ${publicIp} -V +1d ${publicKeyPath}`
+      `ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I host_${instanceId} -h -n ${publicIp} -V ${validityPeriod} ${publicKeyPath}`
     )
   );
   

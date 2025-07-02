@@ -1,6 +1,7 @@
 import fs from 'fs';
 import child_process from 'child_process';
 import util from 'util';
+import formatDate from './format-date.js';
 
 const exec = util.promisify(child_process.exec);
 const validityInDays = process.env.validityInDays ?? 1;
@@ -32,9 +33,17 @@ export const signClientSSHCertificate = async (callerIdentity, secret, certPubke
     ...secret[roleName].split(',').map(s => s.trim())
   ].join(',');
 
+  const now = new Date();
+  const validFrom = formatDate(now);
+  
+  const validUntil = new Date(now.getTime() + (validityInDays * 24 * 60 * 60 * 1000));
+  const validTo = formatDate(validUntil);
+
+  const validityPeriod = `${validFrom}:${validTo}`;
+
   (
     { stdout, stderr } = await exec(
-    `ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I client_${roleName} -n ${principalList} -V +${validityInDays}d ${publicKeyPath}`
+    `ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I client_${roleName} -n ${principalList} -V ${validityPeriod} ${publicKeyPath}`
     )
   );
 
