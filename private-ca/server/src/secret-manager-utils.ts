@@ -2,13 +2,12 @@ import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-sec
 import { SecretData } from './types/index.js';
 
 export const getSecret = async (
-  secretPrefix: string, 
   accountId: string
 ): Promise<SecretData | null> => {
   const client = new SecretsManagerClient();
   try {
     const command = new GetSecretValueCommand({ 
-      SecretId: `${secretPrefix}_${accountId}_secret` 
+      SecretId: `privateCA_${accountId}_secret` 
     });
     const response = await client.send(command);
     

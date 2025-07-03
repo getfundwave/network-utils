@@ -23,7 +23,7 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
     const accountId = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Account;
 
     // secret
-    const secret = await getSecret('privateCA', accountId);
+    const secret = await getSecret(accountId);
     if (!secret) {
       return {
         statusCode: 401,
