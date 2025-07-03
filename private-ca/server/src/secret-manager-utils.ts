@@ -21,4 +21,4 @@ export const getSecret = async (
     console.log(err);
     return null;
   }
-}; 
+};

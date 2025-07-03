@@ -6,8 +6,8 @@ ROLE_NAME=${2:-"privateCALambdaRole"}
 POLICY_NAME=${3:-"PrivateCAPolicy"}
 LAYER_NAME=${4:-"openssh"}
 FUNCTION_NAME=${5:-"privateCA"}
-AWS_REGION=${6:-"ap-southeast-12"}
-AWS_PROFILE=${7:-"harshit-root"}
+AWS_REGION=${6:-"ap-southeast-1"}
+AWS_PROFILE=${7:-"default"}
 ################## Secret ##################
 
 ACCOUNT_ID=$(aws sts get-caller-identity --profile $AWS_PROFILE | jq -r ".Account")
