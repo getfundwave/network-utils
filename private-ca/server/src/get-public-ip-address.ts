@@ -1,6 +1,9 @@
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 
-export const getPublicIpAddress = async (region, instanceId) => {
+export const getPublicIpAddress = async (
+  region: string, 
+  instanceId: string
+): Promise<string> => {
   const client = new EC2Client({ region });
 
   const command = new DescribeInstancesCommand({
@@ -16,8 +19,12 @@ export const getPublicIpAddress = async (region, instanceId) => {
       throw new Error(`Instance ${instanceId} not found`);
     }
 
+    if (!instance.PublicIpAddress) {
+      throw new Error(`Instance ${instanceId} does not have a public IP address`);
+    }
+
     return instance.PublicIpAddress;
   } catch (error) {
     throw error;
   }
-};
+}; 
