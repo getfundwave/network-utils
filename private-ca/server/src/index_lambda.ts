@@ -11,13 +11,6 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
   try {
     const parsedEvent: LambdaEvent = JSON.parse(event.body);
 
-    if (!parsedEvent.certPubkey) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Missing certPubkey' }),
-      };
-    }
-
     // auth
     const callerIdentity = await getCallerIdentity(parsedEvent);
     const accountId = callerIdentity.GetCallerIdentityResponse.GetCallerIdentityResult.Account;
@@ -36,6 +29,12 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
     // action
     switch (parsedEvent.action) {
       case "generateHostSSHCert": {
+        if (!parsedEvent.certPubkey) {
+          return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'Missing certPubkey' }),
+          };
+        }
         if (!parsedEvent.awsEC2Region) {
           return {
             statusCode: 400,
@@ -60,6 +59,12 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
       }
       
       case "generateClientSSHCert": {
+        if (!parsedEvent.certPubkey) {
+          return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'Missing certPubkey' }),
+          };
+        }
         const clientSSHCert = await signClientSSHCertificate(
           callerIdentity, 
           secret, 
@@ -72,6 +77,13 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
             certificate: Buffer.from(clientSSHCert).toString('base64'),
             'host_ca.pub': secret['host_ca.pub']
           })
+        };
+      }
+
+      case "getHostCAPublicKey": {
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ 'host_ca.pub': secret['host_ca.pub'] })
         };
       }
       

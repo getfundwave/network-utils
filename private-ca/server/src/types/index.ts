@@ -1,7 +1,7 @@
 export interface LambdaEvent {
   body: string;
   certPubkey: string;
-  action: 'generateHostSSHCert' | 'generateClientSSHCert';
+  action: 'generateHostSSHCert' | 'generateClientSSHCert' | 'getHostCAPublicKey';
   awsEC2Region?: string;
   awsSTSRegion: string;
   auth: AuthCredentials;
