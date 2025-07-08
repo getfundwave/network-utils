@@ -36,7 +36,6 @@ get_aws_credentials() {
     ACCESS_KEY_ID=$(echo $TEMP_CREDS | jq -r ".AccessKeyId")
     SECRET_ACCESS_KEY=$(echo $TEMP_CREDS | jq -r ".SecretAccessKey")
     SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Token // .SessionToken // .Sessiontoken")
-    echo "Using AWS credentials from environment variables $AWS_ACCESS_KEY_ID, $AWS_SECRET_ACCESS_KEY, $AWS_SESSION_TOKEN"
 }
 
 get_aws_credentials $ENVIRONMENT
