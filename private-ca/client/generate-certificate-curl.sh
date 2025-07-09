@@ -16,16 +16,15 @@ PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 trap 'clean_config_on_error' EXIT
 
 clean_config_on_error() {
-    [ $? = 0 ] && success="1" || success="0"
-    if [[ $success = "0" && $CA_ACTION = "generateHostSSHCert" ]]; then
-        [[ "$(uname)" == "Darwin" ]] && SED_INPLACE="sed -i ''" || SED_INPLACE="sed -i"
-
-        ${SED_INPLACE} "\|^HostCertificate ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
-        ${SED_INPLACE} "\|^TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
+    if [[ $? -ne 0 && $CA_ACTION = "generateHostSSHCert" ]]; then
+        echo "Error occurred. Cleaning host SSH config..."
+        sed -i "\|^HostCertificate ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
+        sed -i "\|^TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
 
         rm ${SYSTEM_SSH_DIR}/user_ca.pub
         rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
         systemctl restart sshd
+        echo "Host SSH config cleaned."
     fi
 }
 
