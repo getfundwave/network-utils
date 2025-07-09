@@ -2,8 +2,8 @@
 
 CA_URL=${1:-$CA_URL}
 AWS_PROFILE=${2:-"default"}
-USER_SSH_DIR=${3:-"/home/$USER/.ssh"}
-USER_AWS_DIR=${4:-"/home/$USER/.aws"}
+USER_SSH_DIR=${3:-"$HOME/.ssh"}
+USER_AWS_DIR=${4:-"$HOME/.aws"}
 AWS_STS_REGION=${5:-"ap-southeast-1"}
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)

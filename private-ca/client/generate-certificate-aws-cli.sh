@@ -5,8 +5,8 @@ trap 'rm -f *.json' EXIT
 CA_ACTION=${1:-"generateHostSSHCert"}
 ENVIRONMENT=${2:-"client"}
 AWS_PROFILE=${3:-"default"}
-USER_SSH_DIR=${4:-"/home/$USER/.ssh"}
-USER_AWS_DIR=${5:-"/home/$USER/.aws"}
+USER_SSH_DIR=${4:-"$HOME/.ssh"}
+USER_AWS_DIR=${5:-"$HOME/.aws"}
 SYSTEM_SSH_DIR=${6:-"/etc/ssh"}
 LAMBDA_REGION=${7:-'us-west-2'}
 CA_LAMBDA_FUNCTION_NAME=${8:-"privateCA"}
