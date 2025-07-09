@@ -9,6 +9,10 @@ AWS_STS_REGION=${5:-"ap-southeast-1"}
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 [[ $? -ne 0 ]] && { echo "Python binary not found."; exit 1; }
 
+if grep -q "^@cert-authority" "${USER_SSH_DIR}/known_hosts"; then
+  echo "Host CA entry already present in known_hosts. Exiting."
+  exit 0
+fi
 
 is_mfa_enabled() {
   grep -q 'get-credentials' ${USER_AWS_DIR}/credentials
