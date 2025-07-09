@@ -13,6 +13,22 @@ AWS_EC2_REGION=${9:-"us-west-2"}
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 [[ $? -ne 0 ]] && { echo "Python binary not found."; exit 1; }
 
+trap 'clean_config_on_error' EXIT
+
+clean_config_on_error() {
+    [ $? = 0 ] && success="1" || success="0"
+    if [[ $success = "0" && $CA_ACTION = "generateHostSSHCert" ]]; then
+        [[ "$(uname)" == "Darwin" ]] && SED_INPLACE="sed -i ''" || SED_INPLACE="sed -i"
+
+        ${SED_INPLACE} "\|^HostCertificate ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
+        ${SED_INPLACE} "\|^TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
+
+        rm ${SYSTEM_SSH_DIR}/user_ca.pub
+        rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
+        systemctl restart sshd
+    fi
+}
+
 is_mfa_enabled() {
   grep -q 'get-credentials' ${USER_AWS_DIR}/credentials
 }
@@ -78,14 +94,16 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
         if [[ $certificate_expiration_timestamp > $current_timestamp ]]; then
             # Certificate is valid
             echo "A valid certificate was found at ${USER_SSH_DIR}/id_rsa-cert.pub."
-            echo "Aborting..."
             exit;
         else
             # Certificate expired
             rm ${USER_SSH_DIR}/id_rsa-cert.pub
         fi
     fi
-    test -f ${USER_SSH_DIR}/id_rsa.pub || ssh-keygen -t rsa -b 4096 -f ${USER_SSH_DIR}/id_rsa -C host_ca -N ""
+    test -f ${USER_SSH_DIR}/id_rsa.pub || {
+        ssh-keygen -t rsa -b 4096 -f ${USER_SSH_DIR}/id_rsa -C host_ca -N ""
+        rm ${USER_SSH_DIR}/id_rsa-cert.pub
+    }
     CERT_PUBKEY=$(cat ${USER_SSH_DIR}/id_rsa.pub | base64 | tr -d \\n)
 
 elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
@@ -99,21 +117,7 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         exit 1
     fi
     
-    if test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub; then
-        # Host SSH Certificate already exists
-        current_timestamp=$(TZ=UTC date -u +"%Y-%m-%dT%H:%M:%S") 
-        certificate_expiration_timestamp=$(TZ=UTC ssh-keygen -Lf ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub | awk '/Valid:/{print $NF}')
-
-        if [[ $certificate_expiration_timestamp > $current_timestamp ]]; then
-            # Certificate is valid 
-            echo "A valid certificate was found at ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub."
-            echo "Aborting..."
-            exit;
-        else
-            # Certificate expired
-            rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
-        fi
-    fi
+    test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub && rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
     test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub || ssh-keygen -t rsa -b 4096 -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key -C host_ca -N ""
     CERT_PUBKEY=$(cat ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub | base64 | tr -d \\n)
 else
@@ -228,6 +232,7 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
     if [[ $(grep -q "TrustedUserCAKeys" "${SYSTEM_SSH_DIR}/sshd_config"; echo $?) -ne 0 ]]; then
         echo "TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub" >> ${SYSTEM_SSH_DIR}/sshd_config
     fi
+    systemctl restart sshd
 fi
 
 deactivate
