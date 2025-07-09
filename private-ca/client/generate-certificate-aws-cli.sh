@@ -144,7 +144,7 @@ if [ ! -d "private-ca-client-env" ]; then
   $PYTHON_EXEC -m venv private-ca-client-env
 fi
 source private-ca-client-env/bin/activate
-pip install -q --upgrade boto3
+pip install -q --upgrade --disable-pip-version-check boto3
 
 # Update PYTHON_EXEC to use the Python executable from the activated virtual environment
 # This ensures we use the venv's Python with the installed dependencies (boto3)
