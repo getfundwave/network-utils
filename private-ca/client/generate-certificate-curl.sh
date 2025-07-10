@@ -28,10 +28,6 @@ clean_config_on_error() {
     fi
 }
 
-is_mfa_enabled() {
-  grep -q 'get-credentials' ${USER_AWS_DIR}/credentials
-}
-
 get_aws_credentials() {
     local method=${1:-"host"}
     local TEMP_CREDS
@@ -48,20 +44,14 @@ get_aws_credentials() {
         TEMP_CREDS=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/$INSTANCE_ROLE_NAME)
         
     elif [[ $method == "client" ]]; then
-        if is_mfa_enabled; then
-            CALLER_IDENTITY=$(aws sts get-caller-identity --profile $AWS_PROFILE)
+        if [[ -n "$AWS_ACCESS_KEY_ID" && -n "$AWS_SECRET_ACCESS_KEY" && -n "$AWS_SESSION_TOKEN" ]]; then
+            CALLER_IDENTITY=$(aws sts get-caller-identity)
             [[ $? -ne 0 ]] && { echo "Your AWS credentials have either expired or are invalid. Please check your credentials and try again."; exit 1; }
-
-            TEMP_CREDS=$(get-credentials $AWS_PROFILE)
+            TEMP_CREDS=$(echo "{\"AccessKeyId\":\"$AWS_ACCESS_KEY_ID\",\"SecretAccessKey\":\"$AWS_SECRET_ACCESS_KEY\",\"Token\":\"$AWS_SESSION_TOKEN\"}")
         else
-            #check if AWS creds are exposed as env variables (for example, in GitHub Actions), including AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
-            if [[ -n "$AWS_ACCESS_KEY_ID" && -n "$AWS_SECRET_ACCESS_KEY" && -n "$AWS_SESSION_TOKEN" ]]; then
-                CALLER_IDENTITY=$(aws sts get-caller-identity)
-                [[ $? -ne 0 ]] && { echo "Your AWS credentials have either expired or are invalid. Please check your credentials and try again."; exit 1; }
-                TEMP_CREDS=$(echo "{\"AccessKeyId\":\"$AWS_ACCESS_KEY_ID\",\"SecretAccessKey\":\"$AWS_SECRET_ACCESS_KEY\",\"Token\":\"$AWS_SESSION_TOKEN\"}")
-            else
-                TEMP_CREDS=$(aws sts get-session-token --profile $AWS_PROFILE | jq -r ".Credentials")
-            fi
+            TEMP_CREDS=$(aws configure export-credentials --profile $AWS_PROFILE 2>/dev/null)
+            SESSION_TOKEN=$(echo "$TEMP_CREDS" | jq -r '.Token // .SessionToken // .Sessiontoken // empty')
+            [[ -z "$SESSION_TOKEN" ]] && TEMP_CREDS=$(aws sts get-session-token --profile $AWS_PROFILE | jq -r ".Credentials")
         fi
     else 
         echo "Invalid environment provided. Allowed values are 'host' and 'client'"; exit 1;
