@@ -82,18 +82,22 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
     [[ -d "${USER_SSH_DIR}" ]] || { echo "User SSH directory does not exist. Please provide the correct user SSH directory."; exit 1; }
 
+    # Check if a valid certificate exists
+    CERT_VALID=false
     if test -f ${USER_SSH_DIR}/id_rsa-cert.pub; then
         # Client SSH Certificate already exists
         current_timestamp=$(TZ=UTC date -u +"%Y-%m-%dT%H:%M:%S") 
-        certificate_expiration_timestamp=$(TZ=UTC ssh-keygen -Lf ${USER_SSH_DIR}/id_rsa-cert.pub | awk '/Valid:/{print $NF}')
+        certificate_expiration_timestamp=$(TZ=UTC ssh-keygen -Lf ${USER_SSH_DIR}/id_rsa-cert.pub 2>/dev/null | awk '/Valid:/{print $NF}')
 
         if [[ $certificate_expiration_timestamp > $current_timestamp ]]; then
             # Certificate is valid
+            CERT_VALID=true
             echo "A valid certificate was found at ${USER_SSH_DIR}/id_rsa-cert.pub."
             exit;
         else
             # Certificate expired
-            rm ${USER_SSH_DIR}/id_rsa-cert.pub
+            echo "Existing certificate is expired or invalid."
+            rm -f ${USER_SSH_DIR}/id_rsa-cert.pub
         fi
     fi
     test -f ${USER_SSH_DIR}/id_rsa.pub || {
@@ -180,17 +184,50 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
     if [[ "$STATUS_CODE" != "200" ]]; then
         echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
+        if [[ "$CERT_VALID" == "true" ]]; then
+            echo "Keeping existing valid certificate."
+        fi
         exit 1;
     fi
+    
     ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
         echo "Certificate not found in Lambda response. Aborting.";
+        if [[ "$CERT_VALID" == "true" ]]; then
+            echo "Keeping existing valid certificate."
+        fi
         exit 1;
     }
+    
     CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)
     HOST_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"host_ca.pub\"" | base64 -d)
 
-    echo $CERTIFICATE > ${USER_SSH_DIR}/id_rsa-cert.pub
-    echo "Certificate written to ${USER_SSH_DIR}/id_rsa-cert.pub"
+    if [[ -z "$CERTIFICATE" ]]; then
+        echo "Empty certificate received. Not writing to disk."
+        if [[ "$CERT_VALID" == "true" ]]; then
+            echo "Keeping existing valid certificate."
+        fi
+        exit 1
+    fi
+
+    # Write new certificate to temporary file first
+    TEMP_CERT_FILE="${USER_SSH_DIR}/id_rsa-cert.pub.tmp"
+    echo "$CERTIFICATE" > "$TEMP_CERT_FILE"
+    
+    # Verify the new certificate is valid
+    if ssh-keygen -Lf "$TEMP_CERT_FILE" >/dev/null 2>&1; then
+        # New certificate is valid, replace the old one
+        mv "$TEMP_CERT_FILE" "${USER_SSH_DIR}/id_rsa-cert.pub"
+        echo "New certificate written to ${USER_SSH_DIR}/id_rsa-cert.pub"
+        CERT_VALID=true
+    else
+        # New certificate is invalid
+        rm -f "$TEMP_CERT_FILE"
+        echo "Generated certificate is invalid. Discarding."
+        if [[ "$CERT_VALID" == "true" ]]; then
+            echo "Keeping existing valid certificate."
+        fi
+        exit 1
+    fi
 
     [[ -f "${USER_SSH_DIR}/known_hosts" ]] || touch "${USER_SSH_DIR}/known_hosts"
 
