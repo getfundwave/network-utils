@@ -16,7 +16,7 @@ PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 trap 'clean_config_on_error' EXIT
 
 clean_config_on_error() {
-    if [[ $? -ne 0 && $CA_ACTION = "generateHostSSHCert" ]]; then
+    if [[ $? -ne 0 && $CA_ACTION == "generateHostSSHCert" && $CERT_VALID == "false" ]]; then
         echo "Error occurred. Cleaning host SSH config..."
         sed -i "\|^HostCertificate ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
         sed -i "\|^TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
@@ -113,7 +113,21 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         exit 1
     fi
     
-    test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub && rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
+    # Check if a valid certificate exists
+    CERT_VALID=false
+    if test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub; then
+        current_timestamp=$(TZ=UTC date -u +"%Y-%m-%dT%H:%M:%S") 
+        certificate_expiration_timestamp=$(TZ=UTC ssh-keygen -Lf ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub 2>/dev/null | awk '/Valid:/{print $NF}')
+        
+        if [[ $certificate_expiration_timestamp > $current_timestamp ]]; then
+            CERT_VALID=true
+            echo "A valid certificate was found at ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub."
+        else
+            echo "Existing certificate is expired or invalid."
+            rm -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
+        fi
+    fi
+    
     test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub || ssh-keygen -t rsa -b 4096 -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key -C host_ca -N ""
     CERT_PUBKEY=$(cat ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub | base64 | tr -d \\n)
 else
@@ -202,20 +216,48 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
 
     if [[ "$STATUS_CODE" != "200" ]]; then
         echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
+        if [[ "$CERT_VALID" == "true" ]]; then
+            echo "Keeping existing valid certificate."
+        fi
         exit 1;
     fi
+    
     ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
         echo "Certificate not found in Lambda response. Aborting.";
+        if [[ "$CERT_VALID" == "true" ]]; then
+            echo "Keeping existing valid certificate."
+        fi
         exit 1;
     }
+    
     CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)    
     USER_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"user_ca.pub\"" | base64 -d)
 
-    if [[ -n "$CERTIFICATE" ]]; then
-        echo "$CERTIFICATE" > "${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
-        echo "Certificate written to ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
-    else
+    if [[ -z "$CERTIFICATE" ]]; then
         echo "Empty certificate received. Not writing to disk."
+        if [[ "$CERT_VALID" == "true" ]]; then
+            echo "Keeping existing valid certificate."
+        fi
+        exit 1
+    fi
+
+    # Write new certificate to temporary file first
+    TEMP_CERT_FILE="${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub.tmp"
+    echo "$CERTIFICATE" > "$TEMP_CERT_FILE"
+    
+    # Verify the new certificate is valid
+    if ssh-keygen -Lf "$TEMP_CERT_FILE" >/dev/null 2>&1; then
+        # New certificate is valid, replace the old one
+        mv "$TEMP_CERT_FILE" "${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
+        echo "New certificate written to ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
+        CERT_VALID=true
+    else
+        # New certificate is invalid
+        rm -f "$TEMP_CERT_FILE"
+        echo "Generated certificate is invalid. Discarding."
+        if [[ "$CERT_VALID" == "true" ]]; then
+            echo "Keeping existing valid certificate."
+        fi
         exit 1
     fi
 
