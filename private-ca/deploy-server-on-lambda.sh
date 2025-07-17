@@ -13,8 +13,8 @@ AWS_PROFILE=${7:-"default"}
 ACCOUNT_ID=$(aws sts get-caller-identity --profile $AWS_PROFILE | jq -r ".Account")
 
 # Generate Keys
-ssh-keygen -t rsa -b 4096 -f host_ca -C host_ca -N ""
-ssh-keygen -t rsa -b 4096 -f user_ca -C user_ca -N ""
+ssh-keygen -t rsa -b 4096 -f host_ca -C fundwave_host_ca -N ""
+ssh-keygen -t rsa -b 4096 -f user_ca -C fundwave_user_ca -N ""
 
 HOST_CA_PRIVATE_KEY=$(cat host_ca | base64 | tr -d \\n)
 HOST_CA_PUBLIC_KEY=$(cat host_ca.pub | base64 | tr -d \\n)

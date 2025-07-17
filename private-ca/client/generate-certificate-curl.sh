@@ -231,12 +231,16 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
     [[ -f "${USER_SSH_DIR}/known_hosts" ]] || touch "${USER_SSH_DIR}/known_hosts"
 
-    # Add host CA public key to known_hosts file if it doesn't exist
-    if [[ $(grep -q "@cert-authority" "${USER_SSH_DIR}/known_hosts"; echo $?) -ne 0 ]]; then
-        # @cert-authority tells ssh to trust the host CA public key
+    # Add host CA public key to known_hosts file if it doesn't exist and update it if it does
+    # @cert-authority tells ssh to trust the host CA public key
+    # ${HOST_CA_PUBKEY} is the host CA public key that was used to sign the host certificate
+    if grep -qE '^@cert-authority .* fundwave_host_ca$' "${USER_SSH_DIR}/known_hosts"; then
+        # Update existing line
+        sed -i.bak -E "s|^(@cert-authority .*) ssh-rsa .*|\1 ${HOST_CA_PUBKEY}|" "${USER_SSH_DIR}/known_hosts"
+    else
+        # Add new line
         # * means all hosts (wildcard) (you can also specify a list of comma separated hostnames)
-        # ${HOST_CA_PUBKEY} is the host CA public key that was used to sign the host certificate
-        echo "@cert-authority * ${HOST_CA_PUBKEY}" >> ${USER_SSH_DIR}/known_hosts
+        echo "@cert-authority * ${HOST_CA_PUBKEY}" >> "${USER_SSH_DIR}/known_hosts"
     fi
 
 # sudo access is required to generate host certificate
@@ -298,7 +302,16 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         exit 1
     fi
 
-    test -f ${SYSTEM_SSH_DIR}/user_ca.pub || echo $USER_CA_PUBKEY > ${SYSTEM_SSH_DIR}/user_ca.pub
+    [[ -f "${SYSTEM_SSH_DIR}/user_ca.pub" ]] || touch "${SYSTEM_SSH_DIR}/user_ca.pub"
+
+    if grep -qE '.* fundwave_host_ca$' "${SYSTEM_SSH_DIR}/user_ca.pub"; then
+        # Update existing line
+        sed -i.bak -E "s|ssh-rsa .* fundwave_host_ca$|${USER_CA_PUBKEY}|" "${SYSTEM_SSH_DIR}/user_ca.pub"
+    else
+        # Add new line
+        # * means all hosts (wildcard) (you can also specify a list of comma separated hostnames)
+        echo "${USER_CA_PUBKEY}" >> "${SYSTEM_SSH_DIR}/user_ca.pub"
+    fi
 
     if [[ $(grep -q "HostCertificate" "${SYSTEM_SSH_DIR}/sshd_config"; echo $?) -ne 0 ]]; then
         echo "HostCertificate ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub" >> ${SYSTEM_SSH_DIR}/sshd_config
