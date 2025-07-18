@@ -91,11 +91,17 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
         if [[ $certificate_expiration_timestamp > $current_timestamp ]]; then
             # Certificate is valid
-            CERT_VALID=true
-            echo "A valid certificate was found at ${USER_SSH_DIR}/id_rsa-cert.pub."
-            exit;
+            if [[ -f "${USER_SSH_DIR}/known_hosts" ]]; then
+                if grep -qE '^@cert-authority .* fundwave_host_ca$' "${USER_SSH_DIR}/known_hosts"; then
+                    CERT_VALID=true
+                    echo "A valid certificate and known_hosts entry were found."
+                else
+                    echo "Certificate is valid, but known_hosts entry is missing."
+                fi
+            else
+                echo "Certificate is valid, but known_hosts file is missing."
+            fi
         else
-            # Certificate expired
             echo "Existing certificate is expired or invalid."
             rm -f ${USER_SSH_DIR}/id_rsa-cert.pub
         fi
