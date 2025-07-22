@@ -6,7 +6,7 @@ import formatDate from './format-date.js';
 import { CallerIdentityResponse, SecretData } from './types/index.js';
 
 const exec = util.promisify(child_process.exec);
-const validityInDays = parseInt(process.env.validityInDays ?? '1', 10);
+const validityInDays = 7;
 
 export const signHostSSHCertificate = async (
   callerIdentity: CallerIdentityResponse, 
