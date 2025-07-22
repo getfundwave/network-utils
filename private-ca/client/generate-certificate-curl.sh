@@ -125,15 +125,18 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
     
     # Check if a valid certificate exists
     CERT_VALID=false
+    half_life_seconds=302400
     if test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub; then
         current_timestamp=$(TZ=UTC date -u +"%Y-%m-%dT%H:%M:%S") 
         certificate_expiration_timestamp=$(TZ=UTC ssh-keygen -Lf ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub 2>/dev/null | awk '/Valid:/{print $NF}')
-        
-        if [[ $certificate_expiration_timestamp > $current_timestamp ]]; then
+        [[ $(uname) == "Darwin" ]] && cert_expiry_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$certificate_expiration_timestamp" +"%s") || cert_expiry_epoch=$(date -d "$certificate_expiration_timestamp" +"%s")
+        next_run_timestamp=$((current_timestamp + half_life_seconds))
+
+        if [[ $cert_expiry_epoch -gt $next_run_timestamp ]]; then
             CERT_VALID=true
             echo "A valid certificate was found at ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub."
         else
-            echo "Existing certificate is expired or invalid."
+            echo "Existing certificate will expire before next cron run."
             rm -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
         fi
     fi
