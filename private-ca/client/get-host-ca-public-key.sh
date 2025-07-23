@@ -1,7 +1,6 @@
 #!/bin/bash
 
 CA_URL=${1:-$CA_URL}
-AWS_PROFILE=${2:-"default"}
 USER_SSH_DIR=${3:-"$HOME/.ssh"}
 USER_AWS_DIR=${4:-"$HOME/.aws"}
 AWS_STS_REGION=${5:-"ap-southeast-1"}
@@ -9,32 +8,24 @@ AWS_STS_REGION=${5:-"ap-southeast-1"}
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 [[ $? -ne 0 ]] && { echo "Python binary not found."; exit 1; }
 
-if grep -q "^@cert-authority" "${USER_SSH_DIR}/known_hosts"; then
+if grep -qE '^@cert-authority .* fundwave_host_ca$' "${USER_SSH_DIR}/known_hosts" 2>/dev/null; then
   echo "Host CA entry already present in known_hosts. Exiting."
   exit 0
+else
+  echo "Host CA entry not present in known_hosts. Adding it."
 fi
-
-is_mfa_enabled() {
-  grep -q 'get-credentials' ${USER_AWS_DIR}/credentials
-}
 
 get_aws_credentials() {
     local TEMP_CREDS
 
-    if is_mfa_enabled; then
-        CALLER_IDENTITY=$(aws sts get-caller-identity --profile $AWS_PROFILE)
+    if [[ -n "$AWS_ACCESS_KEY_ID" && -n "$AWS_SECRET_ACCESS_KEY" && -n "$AWS_SESSION_TOKEN" ]]; then
+        CALLER_IDENTITY=$(aws sts get-caller-identity)
         [[ $? -ne 0 ]] && { echo "Your AWS credentials have either expired or are invalid. Please check your credentials and try again."; exit 1; }
-
-        TEMP_CREDS=$(get-credentials $AWS_PROFILE)
+        TEMP_CREDS=$(echo "{\"AccessKeyId\":\"$AWS_ACCESS_KEY_ID\",\"SecretAccessKey\":\"$AWS_SECRET_ACCESS_KEY\",\"Token\":\"$AWS_SESSION_TOKEN\"}")
     else
-        #check if AWS creds are exposed as env variables, including AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
-        if [[ -n "$AWS_ACCESS_KEY_ID" && -n "$AWS_SECRET_ACCESS_KEY" && -n "$AWS_SESSION_TOKEN" ]]; then
-            CALLER_IDENTITY=$(aws sts get-caller-identity)
-            [[ $? -ne 0 ]] && { echo "Your AWS credentials have either expired or are invalid. Please check your credentials and try again."; exit 1; }
-            TEMP_CREDS=$(echo "{\"AccessKeyId\":\"$AWS_ACCESS_KEY_ID\",\"SecretAccessKey\":\"$AWS_SECRET_ACCESS_KEY\",\"Token\":\"$AWS_SESSION_TOKEN\"}")
-        else
-            TEMP_CREDS=$(aws sts get-session-token --profile $AWS_PROFILE | jq -r ".Credentials")
-        fi
+        TEMP_CREDS=$(aws configure export-credentials 2>/dev/null)
+        SESSION_TOKEN=$(echo "$TEMP_CREDS" | jq -r '.Token // .SessionToken // .Sessiontoken // empty')
+        [[ -z "$SESSION_TOKEN" ]] && TEMP_CREDS=$(aws sts get-session-token | jq -r ".Credentials")
     fi
 
     ACCESS_KEY_ID=$(echo $TEMP_CREDS | jq -r ".AccessKeyId")
@@ -42,12 +33,12 @@ get_aws_credentials() {
     SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Token // .SessionToken // .Sessiontoken")
 }
 
-get_aws_credentials $ENVIRONMENT
+get_aws_credentials
 
 if [ ! -d "private-ca-client-env" ]; then
   $PYTHON_EXEC -m venv private-ca-client-env
 fi
-source private-ca-client-env/bin/activate
+source ./private-ca-client-env/bin/activate
 pip install -q --upgrade --disable-pip-version-check boto3
 
 # Update PYTHON_EXEC to use the Python executable from the activated virtual environment
@@ -89,12 +80,17 @@ HOST_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"host_ca.pub\"" | base64 -d)
 
 [[ -f "${USER_SSH_DIR}/known_hosts" ]] || touch "${USER_SSH_DIR}/known_hosts"
 
-# Add host CA public key to known_hosts file if it doesn't exist
-if [[ $(grep -q "@cert-authority" "${USER_SSH_DIR}/known_hosts"; echo $?) -ne 0 ]]; then
-    # @cert-authority tells ssh to trust the host CA public key
+# Add host CA public key to known_hosts file if it doesn't exist and update it if it does
+# @cert-authority tells ssh to trust the host CA public key
+# ${HOST_CA_PUBKEY} is the host CA public key that was used to sign the host certificate
+if grep -qE '^@cert-authority .* fundwave_host_ca$' "${USER_SSH_DIR}/known_hosts"; then
+    # Update existing line
+    sed -i.bak -E "s|^(@cert-authority .*) ssh-rsa .*|\1 ${HOST_CA_PUBKEY}|" "${USER_SSH_DIR}/known_hosts"
+else
+    # Add new line
     # * means all hosts (wildcard) (you can also specify a list of comma separated hostnames)
-    # ${HOST_CA_PUBKEY} is the host CA public key that was used to sign the host certificate
-    echo "@cert-authority * ${HOST_CA_PUBKEY}" >> ${USER_SSH_DIR}/known_hosts
+    echo "@cert-authority * ${HOST_CA_PUBKEY}" >> "${USER_SSH_DIR}/known_hosts"
 fi
+echo "Host CA public key added to known_hosts."
 
 deactivate
