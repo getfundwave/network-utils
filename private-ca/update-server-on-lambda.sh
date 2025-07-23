@@ -1,8 +1,8 @@
 #!/bin/bash
 
 FUNCTION_NAME=${1:-'privateCA'}
-REGION=${2:-'ap-southeast-1'}
-PROFILE=${3:-'default'}
+REGION=${2:-'eu-central-1'}
+PROFILE=${3:-''}
 
 cd server
 npm i
