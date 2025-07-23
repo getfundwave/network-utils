@@ -3,12 +3,11 @@
 CA_ACTION=${1:-$CA_ACTION}
 CA_URL=${2:-$CA_URL}
 ENVIRONMENT=${3:-"client"}
-AWS_PROFILE=${4:-"default"}
-USER_SSH_DIR=${5:-"$HOME/.ssh"}
-USER_AWS_DIR=${6:-"$HOME/.aws"}
-SYSTEM_SSH_DIR=${7:-"/etc/ssh"}
-AWS_STS_REGION=${8:-"ap-southeast-1"}
-AWS_EC2_REGION=${9:-"us-west-2"}
+USER_SSH_DIR=${4:-"$HOME/.ssh"}
+USER_AWS_DIR=${5:-"$HOME/.aws"}
+SYSTEM_SSH_DIR=${6:-"/etc/ssh"}
+AWS_STS_REGION=${7:-"ap-southeast-1"}
+AWS_EC2_REGION=${8:-"us-west-2"}
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 [[ $? -ne 0 ]] && { echo "Python binary not found."; exit 1; }
@@ -49,9 +48,9 @@ get_aws_credentials() {
             [[ $? -ne 0 ]] && { echo "Your AWS credentials have either expired or are invalid. Please check your credentials and try again."; exit 1; }
             TEMP_CREDS=$(echo "{\"AccessKeyId\":\"$AWS_ACCESS_KEY_ID\",\"SecretAccessKey\":\"$AWS_SECRET_ACCESS_KEY\",\"Token\":\"$AWS_SESSION_TOKEN\"}")
         else
-            TEMP_CREDS=$(aws configure export-credentials --profile $AWS_PROFILE 2>/dev/null)
+            TEMP_CREDS=$(aws configure export-credentials 2>/dev/null)
             SESSION_TOKEN=$(echo "$TEMP_CREDS" | jq -r '.Token // .SessionToken // .Sessiontoken // empty')
-            [[ -z "$SESSION_TOKEN" ]] && TEMP_CREDS=$(aws sts get-session-token --profile $AWS_PROFILE | jq -r ".Credentials")
+            [[ -z "$SESSION_TOKEN" ]] && TEMP_CREDS=$(aws sts get-session-token | jq -r ".Credentials")
         fi
     else 
         echo "Invalid environment provided. Allowed values are 'host' and 'client'"; exit 1;
@@ -107,8 +106,8 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
         fi
     fi
     test -f ${USER_SSH_DIR}/id_rsa.pub || {
-        ssh-keygen -t rsa -b 4096 -f ${USER_SSH_DIR}/id_rsa -C host_ca -N ""
-        rm ${USER_SSH_DIR}/id_rsa-cert.pub
+        ssh-keygen -t rsa -b 4096 -f ${USER_SSH_DIR}/id_rsa -N ""
+        [[ -f ${USER_SSH_DIR}/id_rsa-cert.pub ]] && rm ${USER_SSH_DIR}/id_rsa-cert.pub
     }
     CERT_PUBKEY=$(cat ${USER_SSH_DIR}/id_rsa.pub | base64 | tr -d \\n)
 
@@ -125,7 +124,7 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
     
     # Check if a valid certificate exists
     CERT_VALID=false
-    half_life_seconds=302400
+    half_life_seconds=259200 # 3 days
     if test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub; then
         current_timestamp=$(TZ=UTC date -u +"%Y-%m-%dT%H:%M:%S") 
         certificate_expiration_timestamp=$(TZ=UTC ssh-keygen -Lf ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub 2>/dev/null | awk '/Valid:/{print $NF}')
@@ -141,7 +140,10 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         fi
     fi
     
-    test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub || ssh-keygen -t rsa -b 4096 -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key -C host_ca -N ""
+    test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub || {
+        ssh-keygen -t rsa -b 4096 -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key -N ""
+        [[ -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub ]] && rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
+    }
     CERT_PUBKEY=$(cat ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub | base64 | tr -d \\n)
 else
     echo "Invalid Action"
@@ -156,7 +158,7 @@ get_aws_credentials $ENVIRONMENT
 if [ ! -d "private-ca-client-env" ]; then
   $PYTHON_EXEC -m venv private-ca-client-env
 fi
-source private-ca-client-env/bin/activate
+source ./private-ca-client-env/bin/activate
 pip install -q --upgrade --disable-pip-version-check boto3
 
 # Update PYTHON_EXEC to use the Python executable from the activated virtual environment
