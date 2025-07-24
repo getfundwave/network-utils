@@ -2,7 +2,7 @@ import fs from 'fs';
 import child_process from 'child_process';
 import util from 'util';
 import { getPublicIpAddress } from './get-public-ip-address.js';
-import formatDate from './format-date.js';
+import { format } from 'date-fns';
 import { CallerIdentityResponse, SecretData } from './types/index.js';
 
 const exec = util.promisify(child_process.exec);
@@ -38,10 +38,10 @@ export const signHostSSHCertificate = async (
   console.log('stderr:', result.stderr);
 
   const now = new Date();
-  const validFrom = formatDate(now);
+  const validFrom = format(now, "yyyyMMddHHmmss");
   
-  const validUntil = new Date(now.getTime() + (validityInDays * 24 * 60 * 60 * 1000));
-  const validTo = formatDate(validUntil);
+  const validUntil = new Date(now.getTime() + (60 * 1000));
+  const validTo = format(validUntil, "yyyyMMddHHmmss");
 
   const validityPeriod = `${validFrom}:${validTo}`;
 
