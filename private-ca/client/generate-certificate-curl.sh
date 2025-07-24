@@ -147,7 +147,7 @@ safe_replace_old_certificate() {
 while getopts ":h" option; do
    case $option in
       h)
-         echo "Usage: ./generate-certificate.sh [ACTION] [CA URL] [ENVIRONMENT] [AWS PROFILE] [USER SSH DIR] [USER AWS DIR] [SYSTEM SSH DIR] [AWS STS REGION]"
+         echo "Usage: bash generate-certificate-curl.sh [ACTION] [CA URL] [ENVIRONMENT] [USER SSH DIR] [USER AWS DIR] [SYSTEM SSH DIR] [AWS STS REGION] [AWS EC2 REGION]"
          echo "Possible actions:"
          echo " generateHostSSHCert: Generates SSH Certificate for Host"
          echo " generateClientSSHCert: Generates SSH Certificate for Client"
@@ -274,6 +274,7 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         echo "TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub" >> ${SYSTEM_SSH_DIR}/sshd_config
     fi
     systemctl restart sshd
+
 else
     echo "Invalid Action"
     echo "Possible actions include:"
