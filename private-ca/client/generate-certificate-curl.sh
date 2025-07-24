@@ -315,9 +315,9 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
 
     [[ -f "${SYSTEM_SSH_DIR}/user_ca.pub" ]] || touch "${SYSTEM_SSH_DIR}/user_ca.pub"
 
-    if grep -qE '.* fundwave_host_ca$' "${SYSTEM_SSH_DIR}/user_ca.pub"; then
+    if grep -qE '.* fundwave_user_ca$' "${SYSTEM_SSH_DIR}/user_ca.pub"; then
         # Update existing line
-        sed -i.bak -E "s|ssh-rsa .* fundwave_host_ca$|${USER_CA_PUBKEY}|" "${SYSTEM_SSH_DIR}/user_ca.pub"
+        sed -i.bak -E "s|ssh-rsa .* fundwave_user_ca$|${USER_CA_PUBKEY}|" "${SYSTEM_SSH_DIR}/user_ca.pub"
     else
         # Add new line
         # * means all hosts (wildcard) (you can also specify a list of comma separated hostnames)
