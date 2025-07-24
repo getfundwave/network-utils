@@ -6,8 +6,8 @@ ENVIRONMENT=${3:-"client"}
 USER_SSH_DIR=${4:-"$HOME/.ssh"}
 USER_AWS_DIR=${5:-"$HOME/.aws"}
 SYSTEM_SSH_DIR=${6:-"/etc/ssh"}
-AWS_STS_REGION=${7:-"ap-southeast-1"}
-AWS_EC2_REGION=${8:-"us-west-2"}
+AWS_STS_REGION=${7:-"eu-central-1"}
+AWS_EC2_REGION=${8:-"eu-central-1"}
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 [[ $? -ne 0 ]] && { echo "Python binary not found."; exit 1; }
