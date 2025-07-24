@@ -109,6 +109,9 @@ invoke_lambda() {
         echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
         exit 1;
     fi
+
+    # If the action is getHostCAPublicKey, we don't get a certificate
+    [[ $CA_ACTION == "getHostCAPublicKey" ]] && return
     
     ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
         echo "Certificate not found in Lambda response. Aborting.";
@@ -275,11 +278,28 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
     fi
     systemctl restart sshd
 
+elif [[ $CA_ACTION = "getHostCAPublicKey" ]]; then
+    get_aws_credentials
+    prepare_event_json
+    invoke_lambda
+
+    HOST_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"host_ca.pub\"" | base64 -d)
+
+    [[ -f "${USER_SSH_DIR}/known_hosts" ]] || touch "${USER_SSH_DIR}/known_hosts"
+
+    if grep -qE '^@cert-authority .* fundwave_host_ca$' "${USER_SSH_DIR}/known_hosts"; then
+        sed -i.bak -E "s|^(@cert-authority .*) ssh-rsa .*|\1 ${HOST_CA_PUBKEY}|" "${USER_SSH_DIR}/known_hosts"
+    else
+        echo "@cert-authority * ${HOST_CA_PUBKEY}" >> "${USER_SSH_DIR}/known_hosts"
+    fi
+    echo "Host CA public key added to known_hosts."
+
 else
     echo "Invalid Action"
     echo "Possible actions include:"
     echo " generateHostSSHCert: Generates SSH Certificate for Host"
     echo " generateClientSSHCert: Generates SSH Certificate for Client"
+    echo " getHostCAPublicKey: Gets the Host CA Public Key"
     exit 1;
 fi
 
