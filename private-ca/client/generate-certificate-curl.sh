@@ -15,20 +15,24 @@ PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 trap 'clean_config_on_error' EXIT
 
 clean_config_on_error() {
-    if [[ $? -ne 0 && $CA_ACTION == "generateHostSSHCert" && $CERT_VALID == "false" ]]; then
-        echo "Error occurred. Cleaning host SSH config..."
-        sed -i "\|^HostCertificate ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
-        sed -i "\|^TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
+    if [[ $? -ne 0 && $CA_ACTION == "generateHostSSHCert" ]]; then
+        if [[ "$CERT_VALID" == "true" ]]; then
+            echo "Keeping existing valid certificate."
+        else 
+            echo "Error occurred. Cleaning host SSH config..."
+            sed -i "\|^HostCertificate ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
+            sed -i "\|^TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
 
-        rm ${SYSTEM_SSH_DIR}/user_ca.pub
-        rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
-        systemctl restart sshd
-        echo "Host SSH config cleaned."
+            rm ${SYSTEM_SSH_DIR}/user_ca.pub
+            rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
+            systemctl restart sshd
+            echo "Host SSH config cleaned."
+        fi
     fi
 }
 
 get_aws_credentials() {
-    local method=${1:-"host"}
+    local ENVIRONMENT=${1:-"host"}
     local TEMP_CREDS
 
     if [[ $method == "host" ]]; then
@@ -93,15 +97,15 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
             if [[ -f "${USER_SSH_DIR}/known_hosts" ]]; then
                 if grep -qE '^@cert-authority .* fundwave_host_ca$' "${USER_SSH_DIR}/known_hosts"; then
                     CERT_VALID=true
-                    echo "A valid certificate and known_hosts entry were found."
+                    echo "A valid user certificate and known_hosts entry were found."
                 else
-                    echo "Certificate is valid, but known_hosts entry is missing."
+                    echo "User certificate is valid, but known_hosts entry is missing."
                 fi
             else
-                echo "Certificate is valid, but known_hosts file is missing."
+                echo "User certificate is valid, but known_hosts file is missing."
             fi
         else
-            echo "Existing certificate is expired or invalid."
+            echo "Existing user certificate is expired or invalid."
             rm -f ${USER_SSH_DIR}/id_rsa-cert.pub
         fi
     fi
@@ -133,9 +137,9 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
 
         if [[ $cert_expiry_epoch -gt $next_run_timestamp ]]; then
             CERT_VALID=true
-            echo "A valid certificate was found at ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub."
+            echo "A valid host certificate was found at ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub."
         else
-            echo "Existing certificate will expire before next cron run."
+            echo "Existing host certificate will expire before next cron run."
             rm -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
         fi
     fi
@@ -195,17 +199,12 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
     if [[ "$STATUS_CODE" != "200" ]]; then
         echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
-        if [[ "$CERT_VALID" == "true" ]]; then
-            echo "Keeping existing valid certificate."
-        fi
+        
         exit 1;
     fi
     
     ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
         echo "Certificate not found in Lambda response. Aborting.";
-        if [[ "$CERT_VALID" == "true" ]]; then
-            echo "Keeping existing valid certificate."
-        fi
         exit 1;
     }
     
@@ -214,9 +213,6 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
 
     if [[ -z "$CERTIFICATE" ]]; then
         echo "Empty certificate received. Not writing to disk."
-        if [[ "$CERT_VALID" == "true" ]]; then
-            echo "Keeping existing valid certificate."
-        fi
         exit 1
     fi
 
@@ -234,9 +230,6 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
         # New certificate is invalid
         rm -f "$TEMP_CERT_FILE"
         echo "Generated certificate is invalid. Discarding."
-        if [[ "$CERT_VALID" == "true" ]]; then
-            echo "Keeping existing valid certificate."
-        fi
         exit 1
     fi
 
@@ -268,17 +261,11 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
 
     if [[ "$STATUS_CODE" != "200" ]]; then
         echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
-        if [[ "$CERT_VALID" == "true" ]]; then
-            echo "Keeping existing valid certificate."
-        fi
         exit 1;
     fi
     
     ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
         echo "Certificate not found in Lambda response. Aborting.";
-        if [[ "$CERT_VALID" == "true" ]]; then
-            echo "Keeping existing valid certificate."
-        fi
         exit 1;
     }
     
@@ -287,9 +274,6 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
 
     if [[ -z "$CERTIFICATE" ]]; then
         echo "Empty certificate received. Not writing to disk."
-        if [[ "$CERT_VALID" == "true" ]]; then
-            echo "Keeping existing valid certificate."
-        fi
         exit 1
     fi
 
@@ -307,9 +291,6 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         # New certificate is invalid
         rm -f "$TEMP_CERT_FILE"
         echo "Generated certificate is invalid. Discarding."
-        if [[ "$CERT_VALID" == "true" ]]; then
-            echo "Keeping existing valid certificate."
-        fi
         exit 1
     fi
 
