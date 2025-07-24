@@ -32,10 +32,9 @@ clean_config_on_error() {
 }
 
 get_aws_credentials() {
-    local ENVIRONMENT=${1:-"host"}
     local TEMP_CREDS
 
-    if [[ $method == "host" ]]; then
+    if [[ $ENVIRONMENT == "host" ]]; then
         TOKEN=$(curl -s --max-time 30 -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 120")
 
         if [[ -z "$TOKEN" ]]; then
@@ -46,7 +45,7 @@ get_aws_credentials() {
         INSTANCE_ROLE_NAME=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/)
         TEMP_CREDS=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/$INSTANCE_ROLE_NAME)
         
-    elif [[ $method == "client" ]]; then
+    elif [[ $ENVIRONMENT == "client" ]]; then
         if [[ -n "$AWS_ACCESS_KEY_ID" && -n "$AWS_SECRET_ACCESS_KEY" && -n "$AWS_SESSION_TOKEN" ]]; then
             CALLER_IDENTITY=$(aws sts get-caller-identity)
             [[ $? -ne 0 ]] && { echo "Your AWS credentials have either expired or are invalid. Please check your credentials and try again."; exit 1; }
@@ -63,6 +62,85 @@ get_aws_credentials() {
     ACCESS_KEY_ID=$(echo $TEMP_CREDS | jq -r ".AccessKeyId")
     SECRET_ACCESS_KEY=$(echo $TEMP_CREDS | jq -r ".SecretAccessKey")
     SESSION_TOKEN=$(echo $TEMP_CREDS | jq -r ".Token // .SessionToken // .Sessiontoken")
+}
+
+prepare_event_json() {
+    # Setup Python virtual environment
+    if [ ! -d "private-ca-client-env" ]; then
+        $PYTHON_EXEC -m venv private-ca-client-env
+    fi
+    source ./private-ca-client-env/bin/activate
+    pip install -q --upgrade --disable-pip-version-check boto3
+
+    # Update PYTHON_EXEC to use the Python executable from the activated virtual environment
+    # This ensures we use the venv's Python with the installed dependencies (boto3)
+    PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
+
+    # Generate Auth Headers
+    output=$($PYTHON_EXEC aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_STS_REGION) || {
+        echo "Failed to generate auth header. Check aws-auth-header.py script.";
+        exit 1;
+    }
+    auth_header=$(echo "$output" | jq -er ".Authorization") || {
+        echo "Failed to parse Authorization from auth-header output.";
+        exit 1;
+    }
+    date=$(echo "$output" | jq -er ".Date") || {
+        echo "Failed to parse Date from auth-header output.";
+        exit 1;
+    }
+
+    # Create event JSON for CA request
+    EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"${auth_header}\",\"sessionToken\":\"${SESSION_TOKEN}\"},\"certPubkey\":\"${CERT_PUBKEY}\",\"action\":\"${CA_ACTION}\",\"awsSTSRegion\":\"${AWS_STS_REGION}\",\"awsEC2Region\":\"${AWS_EC2_REGION}\"}")
+}
+
+invoke_lambda() {
+    read -r STATUS_CODE LAMBDA_RESPONSE < <(
+        curl -s "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" -w "%{http_code}\n" | 
+        { 
+            response=$(cat)
+            status_code=${response: -3}
+            body=${response:0:$((${#response}-3))}
+            echo "$status_code $body"
+        }
+    )
+
+    if [[ "$STATUS_CODE" != "200" ]]; then
+        echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
+        exit 1;
+    fi
+    
+    ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
+        echo "Certificate not found in Lambda response. Aborting.";
+        exit 1;
+    }
+    
+    CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d) 
+
+    if [[ -z "$CERTIFICATE" ]]; then
+        echo "Invalid certificate received. Aborting."
+        exit 1
+    fi
+}
+
+safe_replace_old_certificate() {
+    local CERTIFICATE=${1}
+    local CERT_FILE_PATH=${2}
+
+    local TEMP_CERT_FILE="${CERT_FILE_PATH}.tmp"
+
+    echo "$CERTIFICATE" > "$TEMP_CERT_FILE"
+    
+    # Verify the new certificate is valid
+    if ssh-keygen -Lf "$TEMP_CERT_FILE" >/dev/null 2>&1; then
+        mv "$TEMP_CERT_FILE" "${CERT_FILE_PATH}"
+        echo "New certificate written to ${CERT_FILE_PATH}"
+        CERT_VALID=true
+    else
+        rm -f "$TEMP_CERT_FILE"
+        echo "Generated certificate is invalid. Discarding."
+        exit 1
+    fi
 }
 
 # Check for options
@@ -115,10 +193,31 @@ if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
     }
     CERT_PUBKEY=$(cat ${USER_SSH_DIR}/id_rsa.pub | base64 | tr -d \\n)
 
+    get_aws_credentials
+    prepare_event_json
+    invoke_lambda
+
+    HOST_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"host_ca.pub\"" | base64 -d)
+
+    safe_replace_old_certificate "$CERTIFICATE" "${USER_SSH_DIR}/id_rsa-cert.pub"
+    
+    [[ -f "${USER_SSH_DIR}/known_hosts" ]] || touch "${USER_SSH_DIR}/known_hosts"
+
+    # Add host CA public key to known_hosts file if it doesn't exist and update it if it does
+    # @cert-authority tells ssh to trust the host CA public key
+    # ${HOST_CA_PUBKEY} is the host CA public key that was used to sign the host certificate
+    if grep -qE '^@cert-authority .* fundwave_host_ca$' "${USER_SSH_DIR}/known_hosts"; then
+        # Update existing line
+        sed -i.bak -E "s|^(@cert-authority .*) ssh-rsa .*|\1 ${HOST_CA_PUBKEY}|" "${USER_SSH_DIR}/known_hosts"
+    else
+        # * means all hosts (wildcard) (you can also specify a list of comma separated hostnames)
+        echo "@cert-authority * ${HOST_CA_PUBKEY}" >> "${USER_SSH_DIR}/known_hosts"
+    fi
+
 elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
     # Host certificate generation is not allowed in client environment
     if [[ $ENVIRONMENT = "client" ]]; then
-        echo -e "\nError: generateHostSSHCert is not allowed in client environment.\nHost certificate generation requires host/server environment.\n"
+        echo -e "\nError: generateHostSSHCert is not allowed in client environment.\nHost certificate generation requires host (server) environment.\n"
         exit 1
     fi
     if [ "$EUID" -ne 0 ]; then
@@ -149,159 +248,21 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         [[ -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub ]] && rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
     }
     CERT_PUBKEY=$(cat ${SYSTEM_SSH_DIR}/ssh_host_rsa_key.pub | base64 | tr -d \\n)
-else
-    echo "Invalid Action"
-    echo "Possible actions include:"
-    echo " generateHostSSHCert: Generates SSH Certificate for Host"
-    echo " generateClientSSHCert: Generates SSH Certificate for Client"
-    exit 1;
-fi
 
-get_aws_credentials $ENVIRONMENT
+    get_aws_credentials
+    prepare_event_json
+    invoke_lambda
 
-if [ ! -d "private-ca-client-env" ]; then
-  $PYTHON_EXEC -m venv private-ca-client-env
-fi
-source ./private-ca-client-env/bin/activate
-pip install -q --upgrade --disable-pip-version-check boto3
-
-# Update PYTHON_EXEC to use the Python executable from the activated virtual environment
-# This ensures we use the venv's Python with the installed dependencies (boto3)
-PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
-
-# Auth Headers
-output=$($PYTHON_EXEC aws-auth-header.py $ACCESS_KEY_ID $SECRET_ACCESS_KEY $SESSION_TOKEN $AWS_STS_REGION) || {
-    echo "Failed to generate auth header. Check aws-auth-header.py script.";
-    exit 1;
-}
-auth_header=$(echo "$output" | jq -er ".Authorization") || {
-    echo "Failed to parse Authorization from auth-header output.";
-    exit 1;
-}
-date=$(echo "$output" | jq -er ".Date") || {
-    echo "Failed to parse Date from auth-header output.";
-    exit 1;
-}
-
-EVENT_JSON=$(echo "{\"auth\":{\"amzDate\":\"${date}\",\"authorizationHeader\":\"${auth_header}\",\"sessionToken\":\"${SESSION_TOKEN}\"},\"certPubkey\":\"${CERT_PUBKEY}\",\"action\":\"${CA_ACTION}\",\"awsSTSRegion\":\"${AWS_STS_REGION}\",\"awsEC2Region\":\"${AWS_EC2_REGION}\"}")
-
-
-if [[ $CA_ACTION = "generateClientSSHCert" ]]; then
-    read -r STATUS_CODE LAMBDA_RESPONSE < <(
-        curl -s "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" -w "%{http_code}\n" | 
-        { 
-            response=$(cat)
-            status_code=${response: -3}
-            body=${response:0:$((${#response}-3))}
-            echo "$status_code $body"
-        }
-    )
-
-    if [[ "$STATUS_CODE" != "200" ]]; then
-        echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
-        
-        exit 1;
-    fi
-    
-    ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
-        echo "Certificate not found in Lambda response. Aborting.";
-        exit 1;
-    }
-    
-    CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)
-    HOST_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"host_ca.pub\"" | base64 -d)
-
-    if [[ -z "$CERTIFICATE" ]]; then
-        echo "Empty certificate received. Not writing to disk."
-        exit 1
-    fi
-
-    # Write new certificate to temporary file first
-    TEMP_CERT_FILE="${USER_SSH_DIR}/id_rsa-cert.pub.tmp"
-    echo "$CERTIFICATE" > "$TEMP_CERT_FILE"
-    
-    # Verify the new certificate is valid
-    if ssh-keygen -Lf "$TEMP_CERT_FILE" >/dev/null 2>&1; then
-        # New certificate is valid, replace the old one
-        mv "$TEMP_CERT_FILE" "${USER_SSH_DIR}/id_rsa-cert.pub"
-        echo "New certificate written to ${USER_SSH_DIR}/id_rsa-cert.pub"
-        CERT_VALID=true
-    else
-        # New certificate is invalid
-        rm -f "$TEMP_CERT_FILE"
-        echo "Generated certificate is invalid. Discarding."
-        exit 1
-    fi
-
-    [[ -f "${USER_SSH_DIR}/known_hosts" ]] || touch "${USER_SSH_DIR}/known_hosts"
-
-    # Add host CA public key to known_hosts file if it doesn't exist and update it if it does
-    # @cert-authority tells ssh to trust the host CA public key
-    # ${HOST_CA_PUBKEY} is the host CA public key that was used to sign the host certificate
-    if grep -qE '^@cert-authority .* fundwave_host_ca$' "${USER_SSH_DIR}/known_hosts"; then
-        # Update existing line
-        sed -i.bak -E "s|^(@cert-authority .*) ssh-rsa .*|\1 ${HOST_CA_PUBKEY}|" "${USER_SSH_DIR}/known_hosts"
-    else
-        # Add new line
-        # * means all hosts (wildcard) (you can also specify a list of comma separated hostnames)
-        echo "@cert-authority * ${HOST_CA_PUBKEY}" >> "${USER_SSH_DIR}/known_hosts"
-    fi
-
-# sudo access is required to generate host certificate
-elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
-    read -r STATUS_CODE LAMBDA_RESPONSE < <(
-        curl -s "${CA_URL}" -H 'content-type: application/json' -d "$EVENT_JSON" -w "%{http_code}\n" | 
-        { 
-            response=$(cat)
-            status_code=${response: -3}
-            body=${response:0:$((${#response}-3))}
-            echo "$status_code $body"
-        }
-    )
-
-    if [[ "$STATUS_CODE" != "200" ]]; then
-        echo "CA request failed (Status: ${STATUS_CODE}): ${LAMBDA_RESPONSE}"
-        exit 1;
-    fi
-    
-    ENCODED_CERTIFICATE=$(echo "$LAMBDA_RESPONSE" | jq -er ".certificate") || {
-        echo "Certificate not found in Lambda response. Aborting.";
-        exit 1;
-    }
-    
-    CERTIFICATE=$(echo $ENCODED_CERTIFICATE | base64 -d)    
     USER_CA_PUBKEY=$(echo $LAMBDA_RESPONSE | jq -r ".\"user_ca.pub\"" | base64 -d)
 
-    if [[ -z "$CERTIFICATE" ]]; then
-        echo "Empty certificate received. Not writing to disk."
-        exit 1
-    fi
-
-    # Write new certificate to temporary file first
-    TEMP_CERT_FILE="${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub.tmp"
-    echo "$CERTIFICATE" > "$TEMP_CERT_FILE"
+    safe_replace_old_certificate "$CERTIFICATE" "${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
     
-    # Verify the new certificate is valid
-    if ssh-keygen -Lf "$TEMP_CERT_FILE" >/dev/null 2>&1; then
-        # New certificate is valid, replace the old one
-        mv "$TEMP_CERT_FILE" "${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
-        echo "New certificate written to ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub"
-        CERT_VALID=true
-    else
-        # New certificate is invalid
-        rm -f "$TEMP_CERT_FILE"
-        echo "Generated certificate is invalid. Discarding."
-        exit 1
-    fi
-
     [[ -f "${SYSTEM_SSH_DIR}/user_ca.pub" ]] || touch "${SYSTEM_SSH_DIR}/user_ca.pub"
 
     if grep -qE '.* fundwave_user_ca$' "${SYSTEM_SSH_DIR}/user_ca.pub"; then
         # Update existing line
         sed -i.bak -E "s|ssh-rsa .* fundwave_user_ca$|${USER_CA_PUBKEY}|" "${SYSTEM_SSH_DIR}/user_ca.pub"
     else
-        # Add new line
-        # * means all hosts (wildcard) (you can also specify a list of comma separated hostnames)
         echo "${USER_CA_PUBKEY}" >> "${SYSTEM_SSH_DIR}/user_ca.pub"
     fi
 
@@ -313,6 +274,12 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
         echo "TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub" >> ${SYSTEM_SSH_DIR}/sshd_config
     fi
     systemctl restart sshd
+else
+    echo "Invalid Action"
+    echo "Possible actions include:"
+    echo " generateHostSSHCert: Generates SSH Certificate for Host"
+    echo " generateClientSSHCert: Generates SSH Certificate for Client"
+    exit 1;
 fi
 
 deactivate
