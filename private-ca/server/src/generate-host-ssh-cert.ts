@@ -6,9 +6,9 @@ import { format } from 'date-fns';
 import { CallerIdentityResponse, SecretData } from './types/index.js';
 
 const exec = util.promisify(child_process.exec);
-const validityInDays = 7;
+const hostCertValidityInDays = parseInt(process.env.hostCertValidityInDays ?? '7', 10);
 
-export const signHostSSHCertificate = async (
+export const generateHostSSHCert = async (
   callerIdentity: CallerIdentityResponse, 
   secret: SecretData, 
   certPubkey: string, 
@@ -40,7 +40,7 @@ export const signHostSSHCertificate = async (
   const now = new Date();
   const validFrom = format(now, "yyyyMMddHHmmss");
   
-  const validUntil = new Date(now.getTime() + (60 * 1000));
+  const validUntil = new Date(now.getTime() + (hostCertValidityInDays * 24 * 60 * 60 * 1000));
   const validTo = format(validUntil, "yyyyMMddHHmmss");
 
   const validityPeriod = `${validFrom}:${validTo}`;

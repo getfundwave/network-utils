@@ -6,7 +6,7 @@ USER_SSH_DIR=${3:-"$HOME/.ssh"}
 USER_AWS_DIR=${4:-"$HOME/.aws"}
 SYSTEM_SSH_DIR=${5:-"/etc/ssh"}
 CA_LAMBDA_FUNCTION_NAME=${6:-"privateCA"}
-LAMBDA_REGION=${7:-'us-west-2'}
+LAMBDA_REGION=${7:-'eu-central-1'}
 AWS_STS_REGION=${8:-"eu-central-1"}
 AWS_EC2_REGION=${9:-"eu-central-1"}
 

@@ -1,5 +1,5 @@
-import { signHostSSHCertificate } from './generate-host-ssh-cert.js';
-import { signClientSSHCertificate } from './generate-client-ssh-cert.js';
+import { generateHostSSHCert } from './generate-host-ssh-cert.js';
+import { generateClientSSHCert } from './generate-client-ssh-cert.js';
 import { getCallerIdentity } from './get-caller-identity.js';
 import { getSecret } from './secret-manager-utils.js';
 import { 
@@ -42,7 +42,7 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
           };
         }
 
-        const hostSSHCert = await signHostSSHCertificate(
+        const hostSSHCert = await generateHostSSHCert(
           callerIdentity, 
           secret, 
           parsedEvent.certPubkey, 
@@ -65,7 +65,7 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
             body: JSON.stringify({ error: 'Missing certPubkey' }),
           };
         }
-        const clientSSHCert = await signClientSSHCertificate(
+        const clientSSHCert = await generateClientSSHCert(
           callerIdentity, 
           secret, 
           parsedEvent.certPubkey

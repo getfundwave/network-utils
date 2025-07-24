@@ -5,13 +5,13 @@ import { format } from 'date-fns';
 import { CallerIdentityResponse, SecretData } from './types/index.js';
 
 const exec = util.promisify(child_process.exec);
-const validityInDays = parseInt(process.env.validityInDays ?? '1', 10);
+const clientCertValidityInDays = parseInt(process.env.clientCertValidityInDays ?? '1', 10);
 const caKeyPath = "/tmp/client_ca";
 const publicKeyName = "ssh_client_rsa_key";
 const publicKeyPath = "/tmp/" + publicKeyName + ".pub";
 const certificatePath = "/tmp/" + publicKeyName + "-cert.pub";
 
-export const signClientSSHCertificate = async (
+export const generateClientSSHCert = async (
   callerIdentity: CallerIdentityResponse, 
   secret: SecretData, 
   certPubkey: string
@@ -21,7 +21,7 @@ export const signClientSSHCertificate = async (
   if (!match) {
     throw new Error(`Invalid ARN format: ${arn}`);
   }
-  const roleName = match[1];
+  const principal = match[1];
   const user_ca = Buffer.from(secret.user_ca, 'base64').toString('utf-8');
 
   const decodedCertPubkey = Buffer.from(certPubkey, 'base64').toString('utf-8');
@@ -35,13 +35,13 @@ export const signClientSSHCertificate = async (
   const now = new Date();
   const validFrom = format(now, "yyyyMMddHHmmss");
   
-  const validUntil = new Date(now.getTime() + (validityInDays * 24 * 60 * 60 * 1000));
+  const validUntil = new Date(now.getTime() + (clientCertValidityInDays * 24 * 60 * 60 * 1000));
   const validTo = format(validUntil, "yyyyMMddHHmmss");
 
   const validityPeriod = `${validFrom}:${validTo}`;
 
   result = await exec(
-    `ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I client_${roleName} -n ${roleName} -V ${validityPeriod} ${publicKeyPath}`
+    `ssh-keygen -s ${caKeyPath} -t rsa-sha2-512 -I client_${principal} -n ${principal} -V ${validityPeriod} ${publicKeyPath}`
   );
 
   console.log('stdout:', result.stdout);
