@@ -1,7 +1,7 @@
 #!/bin/bash
 
-CA_ACTION=${1:-$CA_ACTION}
-CA_URL=${2:-$CA_URL}
+CA_ACTION=${1}
+CA_URL=${2}
 ENVIRONMENT=${3:-"client"}
 USER_SSH_DIR=${4:-"$HOME/.ssh"}
 USER_AWS_DIR=${5:-"$HOME/.aws"}
