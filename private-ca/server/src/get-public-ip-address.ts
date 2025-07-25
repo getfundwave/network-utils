@@ -10,21 +10,17 @@ export const getPublicIpAddress = async (
     InstanceIds: [instanceId],
   });
 
-  try {
-    const response = await client.send(command);
-    
-    const instance = response.Reservations?.[0]?.Instances?.[0];
+  const response = await client.send(command);
+  
+  const instance = response.Reservations?.[0]?.Instances?.[0];
 
-    if (!instance) {
-      throw new Error(`Instance ${instanceId} not found`);
-    }
-
-    if (!instance.PublicIpAddress) {
-      throw new Error(`Instance ${instanceId} does not have a public IP address`);
-    }
-
-    return instance.PublicIpAddress;
-  } catch (error) {
-    throw error;
+  if (!instance) {
+    throw new Error(`Instance ${instanceId} not found`);
   }
+
+  if (!instance.PublicIpAddress) {
+    throw new Error(`Instance ${instanceId} does not have a public IP address`);
+  }
+
+  return instance.PublicIpAddress;
 }; 
