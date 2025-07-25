@@ -88,7 +88,7 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
       }
       
       default:
-        console.log("Invalid Action");
+        console.log(`Invalid Action: ${parsedEvent.action}`, { event: parsedEvent });
         return {
           statusCode: 400,
           body: JSON.stringify({ error: 'Invalid Action' }),
