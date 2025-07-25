@@ -23,7 +23,7 @@ clean_config_on_error() {
             echo "Certificate generation failed and current cert would expire before next run. Cleaning host SSH config..."
             sed -i "\|^HostCertificate ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
             sed -i "\|^TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
-            
+
             systemctl restart sshd
             echo "Host SSH config cleaned."
         fi
@@ -149,10 +149,11 @@ safe_replace_old_certificate() {
 while getopts ":h" option; do
    case $option in
       h)
-         echo "Usage: bash generate-certificate-curl.sh [ACTION] [CA URL] [ENVIRONMENT] [USER SSH DIR] [USER AWS DIR] [SYSTEM SSH DIR] [AWS STS REGION] [AWS EC2 REGION]"
+         echo "Usage: bash invoke-private-ca.sh [ACTION] [CA URL] [ENVIRONMENT] [AWS EC2 REGION] [USER SSH DIR] [USER AWS DIR] [SYSTEM SSH DIR] [AWS STS REGION] [CERT HALF LIFE SECONDS]"
          echo "Possible actions:"
          echo " generateHostSSHCert: Generates SSH Certificate for Host"
          echo " generateClientSSHCert: Generates SSH Certificate for Client"
+         echo " getHostCAPublicKey: Gets the Host CA Public Key"
          exit;;
       *)
          echo "Error: Invalid option"

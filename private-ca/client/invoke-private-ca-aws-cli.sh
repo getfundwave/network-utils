@@ -183,11 +183,12 @@ safe_replace_old_certificate() {
 while getopts ":h" option; do
    case $option in
       h)
-         echo "Usage: bash generate-certificate-aws-cli.sh [ACTION] [ENVIRONMENT] [AWS PROFILE] [USER SSH DIR] [USER AWS DIR] [SYSTEM SSH DIR] [AWS STS REGION]"
+         echo "Usage: bash invoke-private-ca-aws-cli.sh [ACTION] [ENVIRONMENT] [AWS_EC2_REGION] [AWS PROFILE] [USER SSH DIR] [USER AWS DIR] [SYSTEM SSH DIR] [CA_LAMBDA_FUNCTION_NAME] [LAMBDA_REGION] [AWS STS REGION] [CERT HALF LIFE SECONDS]"
          echo ""
          echo "Actions:"
          echo "  generateHostSSHCert     Generates SSH Certificate for Host"
          echo "  generateClientSSHCert   Generates SSH Certificate for Client"
+         echo "  getHostCAPublicKey      Gets Host CA Public Key"
          echo ""
          echo "Parameters:"
          echo "  ENVIRONMENT             Environment to use (default: client)"
