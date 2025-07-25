@@ -4,9 +4,9 @@ RUN apk add bash curl jq python3 openssh
 
 WORKDIR /app
 
-COPY generate-certificate-curl.sh .
+COPY invoke-private-ca.sh .
 COPY aws-auth-header.py .
 
-RUN chmod +x generate-certificate-curl.sh
+RUN chmod +x invoke-private-ca.sh
 
-ENTRYPOINT ["bash", "generate-certificate-curl.sh"]
+ENTRYPOINT ["bash", "invoke-private-ca.sh"]
