@@ -9,6 +9,9 @@ CA_LAMBDA_FUNCTION_NAME=${6:-"privateCA"}
 LAMBDA_REGION=${7:-'eu-central-1'}
 AWS_STS_REGION=${8:-"eu-central-1"}
 AWS_EC2_REGION=${9:-"eu-central-1"}
+CERT_VALIDITY_IN_DAYS=${10:-"6"}
+
+CERT_HALF_LIFE_SECONDS=$((CERT_VALIDITY_IN_DAYS * 24 * 60 * 60 / 2))
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 [[ $? -ne 0 ]] && { echo "Python binary not found."; exit 1; }
@@ -123,8 +126,7 @@ invoke_lambda() {
         --cli-binary-format raw-in-base64-out \
         --payload file://private-ca-client-event.json \
         private-ca-client-response.json \
-        --region $LAMBDA_REGION \
-        $AWS_PROFILE_ARG 2>&1) || {
+        --region $LAMBDA_REGION) || {
         echo "$INVOKE_OUTPUT"
         echo "Lambda invocation failed"
         exit 1
@@ -272,12 +274,11 @@ elif [[ $CA_ACTION = "generateHostSSHCert" ]]; then
     
     # Check if a valid certificate exists
     CERT_VALID=false
-    half_life_seconds=259200 # 3 days
     if test -f ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub; then
         current_timestamp=$(date -u +%s) 
         certificate_expiration_timestamp=$(TZ=UTC ssh-keygen -Lf ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub 2>/dev/null | awk '/Valid:/{print $NF}')
         [[ $(uname) == "Darwin" ]] && cert_expiry_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$certificate_expiration_timestamp" +"%s") || cert_expiry_epoch=$(date -d "$certificate_expiration_timestamp" +"%s")
-        next_run_timestamp=$((current_timestamp + half_life_seconds))
+        next_run_timestamp=$((current_timestamp + CERT_HALF_LIFE_SECONDS))
 
         if [[ $cert_expiry_epoch -gt $next_run_timestamp ]]; then
             CERT_VALID=true
