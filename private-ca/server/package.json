@@ -1,0 +1,24 @@
+{
+  "name": "private-ca",
+  "version": "0.0.1",
+  "description": "",
+  "type": "module",
+  "main": "dist/index_lambda.js",
+  "scripts": {
+    "start": "node dist/index_lambda.js",
+    "type-check": "tsc --noEmit",
+    "build": "node build.mjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-ec2": "^3.827.0",
+    "@aws-sdk/client-secrets-manager": "^3.825.0",
+    "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.3.3"
+  }
+}
