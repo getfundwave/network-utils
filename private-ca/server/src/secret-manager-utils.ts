@@ -18,7 +18,7 @@ export const getSecret = async (
     const secret = JSON.parse(response.SecretString) as SecretData;
     return secret;
   } catch (err) {
-    console.log(err);
+    console.error(`Failed to retrieve secret for account ${accountId} from AWS Secrets Manager:`, err);
     return null;
   }
 };
