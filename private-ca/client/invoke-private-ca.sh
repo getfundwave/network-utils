@@ -3,11 +3,11 @@
 CA_ACTION=${1}
 CA_URL=${2}
 ENVIRONMENT=${3:-"client"}
-USER_SSH_DIR=${4:-"$HOME/.ssh"}
-USER_AWS_DIR=${5:-"$HOME/.aws"}
-SYSTEM_SSH_DIR=${6:-"/etc/ssh"}
-AWS_STS_REGION=${7:-"eu-central-1"}
-AWS_EC2_REGION=${8:-"eu-central-1"}
+AWS_EC2_REGION=${4:-"eu-central-1"}
+USER_SSH_DIR=${5:-"$HOME/.ssh"}
+USER_AWS_DIR=${6:-"$HOME/.aws"}
+SYSTEM_SSH_DIR=${7:-"/etc/ssh"}
+AWS_STS_REGION=${8:-"eu-central-1"}
 CERT_HALF_LIFE_SECONDS=${9:-$((6 * 24 * 60 * 60 / 2))}
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)

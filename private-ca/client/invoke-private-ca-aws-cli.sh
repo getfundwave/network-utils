@@ -2,13 +2,14 @@
 
 CA_ACTION=${1}
 ENVIRONMENT=${2:-"client"}
-USER_SSH_DIR=${3:-"$HOME/.ssh"}
-USER_AWS_DIR=${4:-"$HOME/.aws"}
-SYSTEM_SSH_DIR=${5:-"/etc/ssh"}
-CA_LAMBDA_FUNCTION_NAME=${6:-"privateCA"}
-LAMBDA_REGION=${7:-'eu-central-1'}
-AWS_STS_REGION=${8:-"eu-central-1"}
-AWS_EC2_REGION=${9:-"eu-central-1"}
+AWS_EC2_REGION=${3:-"eu-central-1"}
+USER_SSH_DIR=${4:-"$HOME/.ssh"}
+USER_AWS_DIR=${5:-"$HOME/.aws"}
+SYSTEM_SSH_DIR=${6:-"/etc/ssh"}
+CA_LAMBDA_FUNCTION_NAME=${7:-"privateCA"}
+LAMBDA_REGION=${8:-'eu-central-1'}
+AWS_STS_REGION=${9:-"eu-central-1"}
+
 CERT_HALF_LIFE_SECONDS=${10:-$((6 * 24 * 60 * 60 / 2))}
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
