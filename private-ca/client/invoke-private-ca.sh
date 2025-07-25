@@ -8,7 +8,7 @@ USER_SSH_DIR=${5:-"$HOME/.ssh"}
 USER_AWS_DIR=${6:-"$HOME/.aws"}
 SYSTEM_SSH_DIR=${7:-"/etc/ssh"}
 AWS_STS_REGION=${8:-"eu-central-1"}
-CERT_HALF_LIFE_SECONDS=${9:-$((6 * 24 * 60 * 60 / 2))}
+CERT_HALF_LIFE_SECONDS=${9:-$((3 * 24 * 60 * 60))}
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 [[ $? -ne 0 ]] && { echo "Python binary not found."; exit 1; }
