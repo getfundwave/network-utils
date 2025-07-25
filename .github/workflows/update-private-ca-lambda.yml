@@ -15,6 +15,7 @@ permissions:
 jobs:
   update-lambda:
     runs-on: "ubuntu-24.04"
+    environment: "Prod"
 
     steps:
       - name: Checkout code
