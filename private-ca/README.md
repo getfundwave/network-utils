@@ -43,13 +43,19 @@ This creates the following resources on AWS:
 #### For client certificates:
 
 ```bash
-bash client/generate-certificate-curl.sh generateClientSSHCert <PRIVATE-CA-URL> client
+bash invoke-private-ca.sh generateClientSSHCert <PRIVATE-CA-URL> client
 ```
 
 #### For host certificates:
 
 ```bash
-bash client/generate-certificate-curl.sh generateHostSSHCert <PRIVATE-CA-URL> host
+bash invoke-private-ca.sh generateHostSSHCert <PRIVATE-CA-URL> host
+```
+
+#### For getting host CA public key:
+
+```bash
+bash invoke-private-ca.sh getHostCAPublicKey <PRIVATE-CA-URL> client
 ```
 
 **Note:**
@@ -59,12 +65,12 @@ bash client/generate-certificate-curl.sh generateHostSSHCert <PRIVATE-CA-URL> ho
 
 ### Running via AWS CLI (Lambda)
 
-The `generate-certificate-aws-cli.sh` script provides an alternative approach to generate certificates. This method uses AWS CLI to invoke a Lambda function rather than making direct HTTP requests.
+The `invoke-private-ca-aws-cli.sh` script provides an alternative approach to generate certificates. This method uses AWS CLI to invoke the Lambda function rather than making HTTP requests.
 
 #### Usage:
 
 ```bash
-bash client/generate-certificate-aws-cli.sh <CA_ACTION> <ENVIRONMENT> <AWS-PROFILE> <USER-SSH-DIR> <SYSTEM-SSH-DIR> <LAMBDA-REGION> <CA-LAMBDA-FUNCTION-NAME> <AWS-STS-REGION>
+bash invoke-private-ca-aws-cli.sh <CA_ACTION> <ENVIRONMENT> <USER-SSH-DIR> <SYSTEM-SSH-DIR> <CA-LAMBDA-FUNCTION-NAME> <LAMBDA-REGION> <AWS-STS-REGION> <AWS-EC2-REGION> <CERT-HALF-LIFE-SECONDS>
 ```
 
 ### Running via Docker
@@ -80,15 +86,12 @@ bash client/generate-certificate-aws-cli.sh <CA_ACTION> <ENVIRONMENT> <AWS-PROFI
 
    ```bash
    docker run --rm \
-      -v /home/$USER/.ssh:/root/.ssh \
+      -v $HOME/.ssh:/root/.ssh \
       -v /etc/ssh:/etc/ssh \
-      -v /etc/ssl/privateCA:/etc/ssl/privateCA \
       certificate-generator \
       generateHostSSHCert \
       https://<PRIVATE-CA-URL>/ \
       host \
-      default \
-      /root/.ssh
    ```
 
 ## Running as a cron job (optional)
@@ -101,7 +104,7 @@ Sample script:
 #!/bin/bash
 
 # Create the cron job entry
-echo "* */1 * * * cd /path/to/private-ca && bash client/generate-certificate-curl.sh generateHostSSHCert https://<PRIVATE-CA-URL>/ host >> /home/cron.log 2>&1" > /tmp/root_crontab
+echo "* */1 * * * cd /path/to/private-ca/client && bash invoke-private-ca.sh generateHostSSHCert https://<PRIVATE-CA-URL>/ host >> /home/cron.log 2>&1" > /tmp/root_crontab
 
 # Load into root's crontab
 crontab -u root /tmp/root_crontab
@@ -112,25 +115,27 @@ systemctl start cron 2>/dev/null || systemctl start crond 2>/dev/null
 
 ## Script Parameters
 
-Both `generate-certificate-curl.sh` and `generate-certificate-aws-cli.sh` accept several shared and some script-specific parameters.
+Both `invoke-private-ca.sh` and `invoke-private-ca-aws-cli.sh` accept several shared and some script-specific parameters.
 
-| Parameter                 | Required | Description                                                                    | Used In Script(s)                 | Default Value      |
-| ------------------------- | -------- | ------------------------------------------------------------------------------ | --------------------------------- | ------------------ |
-| `CA_ACTION`               | Yes      | Action to perform: `generateClientSSHCert` or `generateHostSSHCert`            | Both                              | —                  |
-| `CA_URL`                  | Yes      | URL of the Private CA                                                          | `generate-certificate-curl.sh`    | —                  |
-| `ENVIRONMENT`             | No       | Machine environment: `"client"` (uses AWS CLI) or `"host"` (uses EC2 metadata) | Both                              | `client`           |
-| `AWS_PROFILE`             | No       | AWS CLI profile name                                                           | Both                              | `default`          |
-| `USER_SSH_DIR`            | No       | Path to user's SSH directory                                                   | Both                              | `/home/$USER/.ssh` |
-| `USER_AWS_DIR`            | No       | Path to user's AWS directory                                                   | `generate-certificate-curl.sh`    | `/home/$USER/.aws` |
-| `SYSTEM_SSH_DIR`          | No       | Path to system SSH directory                                                   | Both                              | `/etc/ssh`         |
-| `AWS_STS_REGION`          | No       | AWS region to use for STS operations                                           | Both                              | `ap-southeast-1`   |
-| `LAMBDA_REGION`           | No       | AWS region where the Lambda function is deployed                               | `generate-certificate-aws-cli.sh` | `us-west-2`        |
-| `CA_LAMBDA_FUNCTION_NAME` | No       | Name of the Lambda function that performs certificate signing                  | `generate-certificate-aws-cli.sh` | `privateCA`        |
+| Parameter                 | Required | Description                                                                                | Used In Script(s)              | Default Value             |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------ | ------------------------------ | ------------------------- |
+| `CA_ACTION`               | Yes      | Action to perform: `generateClientSSHCert`, `generateHostSSHCert`, or `getHostCAPublicKey` | Both                           | —                         |
+| `CA_URL`                  | Yes      | URL of the Private CA                                                                      | `invoke-private-ca.sh`         | —                         |
+| `ENVIRONMENT`             | No       | Machine environment: `"client"` (uses AWS CLI) or `"host"` (uses EC2 metadata)             | Both                           | `client`                  |
+| `USER_SSH_DIR`            | No       | Path to user's SSH directory                                                               | Both                           | `$HOME/.ssh`              |
+| `USER_AWS_DIR`            | No       | Path to user's AWS directory                                                               | `invoke-private-ca.sh`         | `$HOME/.aws`              |
+| `SYSTEM_SSH_DIR`          | No       | Path to system SSH directory                                                               | Both                           | `/etc/ssh`                |
+| `AWS_STS_REGION`          | No       | AWS region to use for STS operations                                                       | Both                           | `eu-central-1`            |
+| `LAMBDA_REGION`           | No       | AWS region where the Lambda function is deployed                                           | `invoke-private-ca-aws-cli.sh` | `eu-central-1`            |
+| `CA_LAMBDA_FUNCTION_NAME` | No       | Name of the Lambda function that performs certificate signing                              | `invoke-private-ca-aws-cli.sh` | `privateCA`               |
+| `AWS_EC2_REGION`          | No       | AWS region where the EC2 instance is deployed                                              | `invoke-private-ca-aws-cli.sh` | `eu-central-1`            |
+| `CERT_HALF_LIFE_SECONDS`  | No       | Certificate half-life in seconds                                                           | Both                           | `259200 seconds (3 days)` |
 
 ## Important Notes
 
-- **Certificate Type**: Determined by the `CA_ACTION` parameter (`generateClientSSHCert` or `generateHostSSHCert`)
+- **Certificate Type**: Determined by the `CA_ACTION` parameter (`generateClientSSHCert`, `generateHostSSHCert`, or `getHostCAPublicKey`)
 - **Permissions**: Host certificates require sudo privileges for system directory access
+- **Public Key Retrieval**: The `getHostCAPublicKey` action retrieves the Host CA's public key for host certificate verification
 
 ## Client Environment Limitations
 
@@ -144,8 +149,12 @@ Both `generate-certificate-curl.sh` and `generate-certificate-aws-cli.sh` accept
 - `deploy-server-on-lambda.sh`: Script to deploy the Lambda function and related AWS resources
 - `update-server-on-lambda.sh`: Script to update the deployed Lambda function
 - `client/`: Directory containing client-side tools
-  - `generate-certificate-curl.sh`: Main script for certificate generation using curl
-  - `generate-certificate-aws-cli.sh`: Alternative script using AWS CLI
+  - `invoke-private-ca.sh`: Main script for certificate generation using curl
+  - `invoke-private-ca-aws-cli.sh`: Alternative script using AWS CLI
   - `aws-auth-header.py`: Python helper for generating AWS authentication headers
   - `Dockerfile`: Docker container configuration
 - `server/`: Directory containing server-side Lambda function code
+
+```
+
+```
