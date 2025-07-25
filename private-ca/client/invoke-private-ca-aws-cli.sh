@@ -23,12 +23,10 @@ clean_config_on_error() {
         if [[ "$CERT_VALID" == "true" ]]; then
             echo "Keeping existing valid certificate."
         else 
-            echo "Error occurred. Cleaning host SSH config..."
+            echo "Certificate generation failed and current cert would expire before next run. Cleaning host SSH config..."
             sed -i "\|^HostCertificate ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
             sed -i "\|^TrustedUserCAKeys ${SYSTEM_SSH_DIR}/user_ca.pub\$|d"  ${SYSTEM_SSH_DIR}/sshd_config
 
-            rm ${SYSTEM_SSH_DIR}/user_ca.pub
-            rm ${SYSTEM_SSH_DIR}/ssh_host_rsa_key-cert.pub
             systemctl restart sshd
             echo "Host SSH config cleaned."
         fi
