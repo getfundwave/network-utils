@@ -8,9 +8,7 @@ USER_AWS_DIR=${5:-"$HOME/.aws"}
 SYSTEM_SSH_DIR=${6:-"/etc/ssh"}
 AWS_STS_REGION=${7:-"eu-central-1"}
 AWS_EC2_REGION=${8:-"eu-central-1"}
-CERT_VALIDITY_IN_DAYS=${9:-"6"}
-
-CERT_HALF_LIFE_SECONDS=$((CERT_VALIDITY_IN_DAYS * 24 * 60 * 60 / 2))
+CERT_HALF_LIFE_SECONDS=${9:-$((6 * 24 * 60 * 60 / 2))}
 
 PYTHON_EXEC=$(which python 2>/dev/null || which python3 2>/dev/null)
 [[ $? -ne 0 ]] && { echo "Python binary not found."; exit 1; }
