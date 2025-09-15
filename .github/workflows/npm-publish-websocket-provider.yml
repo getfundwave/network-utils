@@ -76,7 +76,7 @@ jobs:
         run: |
           echo //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} > ~/.npmrc
           echo registry=https://registry.npmjs.org/ >> ~/.npmrc
-          npm run publish -- $VERSION --yes --dist-tag=$BRANCH_TAG --no-push --preid ${{ github.ref_name }} ${{ github.ref_name == 'main' && '' || '--include-merged-tags' }}
+          npm publish -- $VERSION --yes --dist-tag=$BRANCH_TAG --no-push --preid ${{ github.ref_name }} ${{ github.ref_name == 'main' && '' || '--include-merged-tags' }}
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPMJS_TOKEN}}
 
