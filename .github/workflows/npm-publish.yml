@@ -1,6 +1,9 @@
-name: Release and Publish websocket-provider
+name: Release and Publish JWKS-slim
 
-on: workflow_dispatch
+on:
+  push:
+    paths:
+      - "jwks-slim/**"
 
 env:
   BRANCH_TAG: "${{ github.ref_name == 'main' && 'latest' || github.ref_name }}"
@@ -12,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: "websocket-provider"
+        working-directory: "jwks-slim"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -25,12 +28,12 @@ jobs:
         
   publish_and_release:
     needs: test
-    name: Publish websocket-provider package
+    name: Publish JWKS-slim package
     environment: "${{ github.ref_name == 'main' && 'Prod' || 'Dev' }}"
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: "websocket-provider"
+        working-directory: "jwks-slim"
     steps:
       - name: Generate token
         if: ${{ github.ref_name == 'main'}}
@@ -57,7 +60,7 @@ jobs:
           patch-wording: ${{ null }}
           rc-wording: ${{ null }}
           default: "${{ env.BRANCH == 'main' && 'patch' || 'prerelease' }}"
-          PACKAGEJSON_DIR: "websocket-provider"
+          PACKAGEJSON_DIR: "jwks-slim"
           preid: "${{ env.BRANCH }}"
           skip-tag: "true"
           skip-push: "true"
@@ -70,7 +73,7 @@ jobs:
         run: |
           git config user.email "fundabot@fundwave.com"
           git config user.name "fundabot"
-          git commit -a -m "CI: bumps websocket-provider to $VERSION" -m "[skip ci]"
+          git commit -a -m "CI: bumps jwks-slim to $VERSION" -m "[skip ci]"
 
       - name: Publish package to npm
         if: ${{ github.ref_name == 'main'}}
