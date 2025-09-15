@@ -1,6 +1,8 @@
 name: Release and Publish websocket-provider
 
-on: workflow_dispatch
+on: 
+  push:
+    branches: [websocket-provider]
 
 env:
   BRANCH_TAG: "${{ github.ref_name == 'main' && 'latest' || github.ref_name }}"
