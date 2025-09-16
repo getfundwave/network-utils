@@ -66,33 +66,9 @@ jobs:
           skip-commit: "true"
           bump-policy: "ignore"
 
-      - name: Commit changes
-        env:
-          VERSION: ${{ steps.version.outputs.newTag }}
-        run: |
-          git config user.email "fundabot@fundwave.com"
-          git config user.name "fundabot"
-          git commit -a -m "CI: bumps secure-ws to $VERSION" -m "[skip ci]"
-
       - name: Publish package to npm
         run: |
-          echo //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} > ~/.npmrc
-          echo registry=https://registry.npmjs.org/ >> ~/.npmrc
-          npm publish --tag $BRANCH_TAG --access public
+          ls -la
+          ls -la dist
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPMJS_TOKEN}}
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ env.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
-
-      - name: Release
-        if: ${{ github.ref_name == 'main'}}
-        env:
-          VERSION: ${{ steps.version.outputs.newTag }}
-        run: |
-          if [ "${BRANCH}" != "main" ]; then PRERELEASE="-p"; fi
-          echo "Releasing version ${VERSION} on branch ${BRANCH}"
-          gh release create ${VERSION} --target ${BRANCH} --generate-notes ${PRERELEASE}
