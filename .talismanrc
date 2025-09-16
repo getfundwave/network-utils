@@ -15,6 +15,8 @@ fileignoreconfig:
   checksum: 207c0d07dea4c069883822b2b268d3b34c8b18bdfd645b8aa3b2be20f280c270
 - filename: jwks-slim/tests/mock.js
   checksum: 0d2fd2ec4847acda384c398e04e8aab9a615a8599b0a06d685e7fb100e71537c
+- filename: secure-ws/mocks/express-response.ts
+  checksum: 7774e72616894119c419f7ad86a3da579036b0391fd208766bcdcb96401b8d2c
 - filename: websocket-provider/package-lock.json
   checksum: 605a2d92b91f08ee577d3b1e7ed38d27eef43573a044608c22466f05ab6eaff7
 threshold: medium

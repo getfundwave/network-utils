@@ -1,12 +1,12 @@
 {
-  "name": "websocket-provider",
-  "version": "1.0.1-websocket-provider.0",
+  "name": "secure-ws",
+  "version": "0.0.1",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc"
   },
-  "author": "",
+  "author": "The Fundwave Authors",
   "license": "ISC",
   "description": "",
   "devDependencies": {
