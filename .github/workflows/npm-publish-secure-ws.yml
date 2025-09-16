@@ -1,4 +1,4 @@
-name: Release and Publish websocket-provider
+name: Release and Publish secure-ws
 
 on: 
   push:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: "websocket-provider"
+        working-directory: "secure-ws"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -25,12 +25,12 @@ jobs:
         
   publish_and_release:
     needs: setup
-    name: Publish websocket-provider package
+    name: Publish secure-ws package
     environment: "${{ github.ref_name == 'main' && 'Prod' || 'Dev' }}"
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: "websocket-provider"
+        working-directory: "secure-ws"
     steps:
       - name: Generate token
         if: ${{ github.ref_name == 'main'}}
@@ -57,7 +57,7 @@ jobs:
           patch-wording: ${{ null }}
           rc-wording: ${{ null }}
           default: "${{ env.BRANCH == 'main' && 'patch' || 'prerelease' }}"
-          PACKAGEJSON_DIR: "websocket-provider"
+          PACKAGEJSON_DIR: "secure-ws"
           preid: "${{ env.BRANCH }}"
           skip-tag: "true"
           skip-push: "true"
@@ -70,7 +70,7 @@ jobs:
         run: |
           git config user.email "fundabot@fundwave.com"
           git config user.name "fundabot"
-          git commit -a -m "CI: bumps websocket-provider to $VERSION" -m "[skip ci]"
+          git commit -a -m "CI: bumps secure-ws to $VERSION" -m "[skip ci]"
 
       - name: Publish package to npm
         run: |
