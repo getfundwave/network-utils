@@ -10,7 +10,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  setup:
+  build:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,9 +22,11 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: npm ci
+      - name: Build
+        run: npm run build
         
   publish_and_release:
-    needs: setup
+    needs: build
     name: Publish secure-ws package
     environment: "${{ github.ref_name == 'main' && 'Prod' || 'Dev' }}"
     runs-on: ubuntu-latest
