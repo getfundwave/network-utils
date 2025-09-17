@@ -48,8 +48,12 @@ export class WebSocketProvider {
   private handleConnection = async (ws: WSWebSocket, request: IncomingMessage) => {
     const { pathname } = new URL(request.url!, 'wss://base.url');
 
-    const httpRequest = WSProtocolCodec.decode(ws.protocol || '');
-    const injectedRequest = injectHttpRequest(request, httpRequest);
+    let injectedRequest = {} as IncomingMessage;
+
+    if (typeof ws.protocol === 'string' && ws.protocol.trim() !== '') {
+      const httpRequest = WSProtocolCodec.decode(ws.protocol);
+      injectedRequest = injectHttpRequest(request, httpRequest);
+    }
 
     if(!this.routes[pathname]) {
       ws.close(1000, 'Unknown path');
