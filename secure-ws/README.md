@@ -18,7 +18,7 @@ npm install --save secure-ws
 
 ```typescript
 import express from "express";
-import { WebSocketProvider } from 'websocket-provider';
+import { WebSocketProvider } from 'secure-ws';
 
 const wsApp = new WebSocketProvider();
 const app = express();
@@ -35,7 +35,7 @@ wsApp.addRoute(
 );
 
 const httpServer = app.listen(PORT, () => {
-  console.info(`File service running at http://localhost:${PORT}`);
+  console.info(`Service running at port: ${PORT}`);
 });
 
 httpServer.on('upgrade', wsApp.handleUpgrade);
