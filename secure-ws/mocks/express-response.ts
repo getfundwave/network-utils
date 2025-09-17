@@ -15,7 +15,12 @@ export class MockResponse implements MockResponseType {
   }
 
   send(data) {
-    this.socket.send(`HTTP/1.1 ${this.statusCode} ${this.getStatusText()}\r\n\r\n`);
+    const responseType = this.statusCode >= 400 ? "error" : "success";
+    this.socket.send(JSON.stringify({ 
+      type: responseType,
+      status: this.statusCode, 
+      data: data 
+    }));
     this.socket.close();
     return this;
   }
