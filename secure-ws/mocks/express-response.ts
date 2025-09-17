@@ -22,7 +22,10 @@ export class MockResponse implements MockResponseType {
 
   sendStatus(code: number) {
     this.statusCode = code;
-    this.socket.send(`HTTP/1.1 ${code} ${this.getStatusText()}\r\n\r\n`);
+    this.socket.send(JSON.stringify({ 
+      status: code, 
+      statusText: this.getStatusText() 
+    }));
     this.socket.close();
     return this;
   }
