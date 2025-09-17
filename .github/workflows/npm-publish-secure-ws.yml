@@ -2,7 +2,8 @@ name: Release and Publish secure-ws
 
 on: 
   push:
-    branches: [websocket-provider]
+    paths:
+      - "secure-ws/**"
 
 env:
   BRANCH_TAG: "${{ github.ref_name == 'main' && 'latest' || github.ref_name }}"
