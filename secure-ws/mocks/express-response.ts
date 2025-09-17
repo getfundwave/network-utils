@@ -1,6 +1,7 @@
 import { WebSocket } from "ws";
+import { MockResponse as MockResponseType } from "../types/mock-response";
 
-export class MockResponse {
+export class MockResponse implements MockResponseType {
   private socket: WebSocket;
   public statusCode: number = 200;
 

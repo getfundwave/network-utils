@@ -1,9 +1,11 @@
 import { IncomingMessage } from 'http';
 import { WebSocket } from 'ws';
 import { MockResponse } from '../mocks/express-response';
+import { MockResponse as MockResponseType } from '../types/mock-response';
+import { NextFunction, Request, Response } from 'express';
 
 export function runExpressMiddleware(
-  middleware: (req, res, next) => void,
+  middleware: (req: Request, res: MockResponseType, next: NextFunction) => void,
   request: IncomingMessage,
   socket: WebSocket
 ): Promise<{ success: boolean; error?: string }> {
@@ -11,7 +13,7 @@ export function runExpressMiddleware(
     const mockRes = new MockResponse(socket);
     let nextCalled = false;
 
-    const next = (error) => {
+    const next = (error?: any) => {
       if (nextCalled) return;
       nextCalled = true;
       
@@ -22,27 +24,8 @@ export function runExpressMiddleware(
       }
     };
 
-    const originalSend = mockRes.send.bind(mockRes);
-    const originalSendStatus = mockRes.sendStatus.bind(mockRes);
-
-    mockRes.send = (data) => {
-      if (!nextCalled) {
-        nextCalled = true;
-        resolve({ success: false, error: `HTTP ${mockRes.statusCode}` });
-      }
-      return mockRes;
-    };
-
-    mockRes.sendStatus = (code: number) => {
-      if (!nextCalled) {
-        nextCalled = true;
-        resolve({ success: false, error: `HTTP ${code}` });
-      }
-      return mockRes;
-    };
-
     try {
-      middleware(request, mockRes, next);
+      middleware(request as Request, mockRes as MockResponseType, next);
     } catch (error) {
       console.error("Middleware exception:", error);
       if (!nextCalled) {
