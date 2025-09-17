@@ -1,7 +1,7 @@
 export class WSProtocolCodec {
   static encode(data: unknown): string {
     const json = JSON.stringify(data);
-    return btoa(json)
+    return Buffer.from(json).toString('base64')
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=+$/, "");
@@ -10,7 +10,7 @@ export class WSProtocolCodec {
   static decode<T = unknown>(encoded: string): T {
     let str = encoded.replace(/-/g, "+").replace(/_/g, "/");
     while (str.length % 4) str += "=";
-    const json = atob(str);
+    const json = Buffer.from(str, 'base64').toString();
     return JSON.parse(json) as T;
   }
 }
