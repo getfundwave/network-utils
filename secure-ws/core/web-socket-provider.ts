@@ -40,7 +40,7 @@ export class WebSocketProvider {
       this.server.emit('connection', ws, request);
       });
     } else {
-      // socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+      console.log('No route for path:', pathname);
       socket.end();
     }
   };
