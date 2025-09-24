@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket as WSWebSocket } from 'ws';
 import { IncomingMessage } from 'http';
-import { Duplex } from 'stream';
 import { decode } from "@msgpack/msgpack";
+import { randomUUID } from "crypto";
 
 import { WSProtocolCodec } from './ws-protocol-codec';
 import { runExpressMiddleware } from '../utils/middleware-adapter';
@@ -9,6 +9,7 @@ import { injectHttpRequest } from '../utils/inject-http-request';
 
 import { WSController } from '../types/ws-controller';
 import { AddRouteParams } from '../types/add-route-params';
+import { ClientSocket } from '../types/client-socket';
 
 export class WebSocketProvider {
   public server: WebSocketServer;
@@ -32,12 +33,13 @@ export class WebSocketProvider {
       onMessage
     }
   }
-  public handleUpgrade = (request: IncomingMessage, socket: Duplex, head: Buffer) => {
+  public handleUpgrade = (request: IncomingMessage, socket: ClientSocket, head: Buffer) => {
     const { pathname } = new URL(request.url!, 'wss://base.url');
     
     if (this.routes[pathname]) {
-      this.server.handleUpgrade(request, socket, head, (ws: any) => {
-      this.server.emit('connection', ws, request);
+      socket.id = `${Date.now()}-${randomUUID()}`;
+      this.server.handleUpgrade(request, socket, head, (ws: WSWebSocket) => {
+        this.server.emit('connection', ws, request);
       });
     } else {
       console.log('No route for path:', pathname);
