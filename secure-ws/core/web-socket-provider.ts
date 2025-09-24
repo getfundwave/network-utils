@@ -1,4 +1,4 @@
-import { WebSocketServer, WebSocket as WSWebSocket } from 'ws';
+import { WebSocketServer } from 'ws';
 import { IncomingMessage } from 'http';
 import { decode } from "@msgpack/msgpack";
 import { randomUUID } from "crypto";
@@ -10,6 +10,7 @@ import { injectHttpRequest } from '../utils/inject-http-request';
 import { WSController } from '../types/ws-controller';
 import { AddRouteParams } from '../types/add-route-params';
 import { ClientSocket } from '../types/client-socket';
+import { Duplex } from 'stream';
 
 export class WebSocketProvider {
   public server: WebSocketServer;
@@ -33,12 +34,12 @@ export class WebSocketProvider {
       onMessage
     }
   }
-  public handleUpgrade = (request: IncomingMessage, socket: ClientSocket, head: Buffer) => {
+  public handleUpgrade = (request: IncomingMessage, socket: Duplex, head: Buffer) => {
     const { pathname } = new URL(request.url!, 'wss://base.url');
     
     if (this.routes[pathname]) {
-      socket.id = `${Date.now()}-${randomUUID()}`;
-      this.server.handleUpgrade(request, socket, head, (ws: WSWebSocket) => {
+      this.server.handleUpgrade(request, socket, head, (ws: ClientSocket) => {
+        ws.id = `${Date.now()}-${randomUUID()}`;
         this.server.emit('connection', ws, request);
       });
     } else {
@@ -47,7 +48,7 @@ export class WebSocketProvider {
     }
   };
 
-  private handleConnection = async (ws: WSWebSocket, request: IncomingMessage) => {
+  private handleConnection = async (ws: ClientSocket, request: IncomingMessage) => {
     const { pathname } = new URL(request.url!, 'wss://base.url');
 
     let injectedRequest = {} as IncomingMessage;
@@ -78,7 +79,7 @@ export class WebSocketProvider {
     ws.send(JSON.stringify({ type: "connection:ack" }));
   };
 
-  private handleMessage = (socket: WSWebSocket, onMessage: WSController[]) => {
+  private handleMessage = (socket: ClientSocket, onMessage: WSController[]) => {
     return async (message) => {
       const request = decode(message) as IncomingMessage;
 

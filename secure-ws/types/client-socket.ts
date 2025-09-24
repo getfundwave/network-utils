@@ -1,5 +1,5 @@
-import { Duplex } from 'stream';
+import { WebSocket } from 'ws';
 
-export interface ClientSocket extends Duplex {
+export interface ClientSocket extends WebSocket {
   id: string;
 }
