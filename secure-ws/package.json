@@ -1,6 +1,6 @@
 {
   "name": "secure-ws",
-  "version": "0.0.2-websocket-provider.12",
+  "version": "0.0.2-websocket-provider.13",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
