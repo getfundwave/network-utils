@@ -14,12 +14,14 @@ import { Duplex } from 'stream';
 
 export class WebSocketProvider {
   public server: WebSocketServer;
+  public clientSockets: Map<string, ClientSocket>;
   private routes: Record<string, AddRouteParams>;
 
   constructor() {
     this.server = new WebSocketServer({ noServer: true });
     this.server.on('connection', this.handleConnection);
     this.routes = {};
+    this.clientSockets = new Map();
   }
 
   public addRoute = (
@@ -39,7 +41,13 @@ export class WebSocketProvider {
     
     if (this.routes[pathname]) {
       this.server.handleUpgrade(request, socket, head, (ws: ClientSocket) => {
+
         ws.id = `${Date.now()}-${randomUUID()}`;
+        this.clientSockets.set(ws.id, ws);
+        ws.on('close', () => {
+          this.clientSockets.delete(ws.id);
+        });
+
         this.server.emit('connection', ws, request);
       });
     } else {
