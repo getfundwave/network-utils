@@ -1,0 +1,36 @@
+name: Verify NPM Security
+
+on:
+    workflow_call:
+        inputs:
+            working-directory:
+                description: "Working directory"
+                required: true
+                type: string
+
+jobs:
+    verify-npm-install:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: read
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v5
+
+            - name: Log in to GitHub Container Registry
+              run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            - name: Pull container
+              run: docker pull ghcr.io/fundwave/npm-security:latest
+
+            - name: Verify npm install
+              working-directory: ${{ inputs.working-directory }}
+              run: |
+                  docker run --rm \
+                    -v $(pwd):/app \
+                    -e GITHUB_READ_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+                    ghcr.io/fundwave/npm-security:latest
+
+            - name: Verification complete
+              run: echo "NPM dependencies verified successfully in ${{ inputs.working-directory }}"
