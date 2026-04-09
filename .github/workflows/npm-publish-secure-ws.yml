@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "secure-ws/**"
+      - .github/workflows/npm-publish-secure-ws.yml
 
 permissions:
   contents: write
