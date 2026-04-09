@@ -5,6 +5,10 @@ on:
     paths:
       - "secure-ws/**"
 
+permissions:
+  contents: write
+  id-token: write
+
 env:
   BRANCH_TAG: "${{ github.ref_name == 'main' && 'latest' || github.ref_name }}"
   BRANCH: ${{ github.ref_name }}
@@ -67,7 +71,6 @@ jobs:
 
       - name: Publish package to npm
         run: |
-          echo //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} > ~/.npmrc
           echo registry=https://registry.npmjs.org/ >> ~/.npmrc
           npm publish --tag $BRANCH_TAG --access public
         env:
