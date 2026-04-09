@@ -32,11 +32,12 @@ jobs:
           app_id: ${{ vars.FUNDABOT_APP_ID }}
           private_key: ${{ secrets.FUNDABOT_PRIVATE_KEY }}
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
-          node-version: 18
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           token: ${{ github.ref_name == 'main' && steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}
       
@@ -72,10 +73,7 @@ jobs:
 
       - name: Publish package to npm
         run: |
-          echo registry=https://registry.npmjs.org/ >> ~/.npmrc
           npm publish --tag $BRANCH_TAG --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPMJS_TOKEN}}
 
       - name: Push changes
         uses: ad-m/github-push-action@master
