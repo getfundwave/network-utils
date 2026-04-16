@@ -16,8 +16,10 @@ export class WebSocketProvider {
   public server: WebSocketServer;
   public clientSockets: Map<string, ClientSocket>;
   private routes: Record<string, AddRouteParams>;
+  private allowedOrigins: string;
 
-  constructor() {
+  constructor({ allowedOrigins }: { allowedOrigins: string }) {
+    this.allowedOrigins = allowedOrigins;
     this.server = new WebSocketServer({ noServer: true });
     this.server.on('connection', this.handleConnection);
     this.routes = {};
@@ -38,7 +40,36 @@ export class WebSocketProvider {
   }
   public handleUpgrade = (request: IncomingMessage, socket: Duplex, head: Buffer) => {
     const { pathname } = new URL(request.url!, 'wss://base.url');
-    
+    const origin = request.headers.origin;
+
+    if (this.allowedOrigins) {
+
+      const origins = this.allowedOrigins
+        .split(",")
+        .filter(origin => origin.trim())
+        .map(origin => {
+          if (/^\/.*\/$/.test(origin)) {
+              return new RegExp(origin.replace(/^\/(.*)\/$/, "$1"));
+          }
+          return origin;
+        });
+      const isOriginAllowed = origins.some(allowedOrigin => {
+        if (allowedOrigin === '*') return true;
+        if (allowedOrigin instanceof RegExp) {
+          return allowedOrigin.test(origin || '');
+        }
+        const regex = new RegExp(`^${allowedOrigin.replace(/\*/g, '.*')}$`);
+        return regex.test(origin || '');
+      });
+
+      if (!isOriginAllowed) {
+        console.error('Origin not allowed:', origin);
+        socket.end();
+        return;
+      }
+    }
+
+
     if (this.routes[pathname]) {
       this.server.handleUpgrade(request, socket, head, (ws: ClientSocket) => {
 
