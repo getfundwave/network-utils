@@ -12,6 +12,11 @@ import { AddRouteParams } from '../types/add-route-params';
 import { ClientSocket } from '../types/client-socket';
 import { Duplex } from 'stream';
 
+const FUNDWAVE_DOMAIN_PATTERNS = [
+    /^(https:\/\/([a-z0-9-]+[.])*(jcurve|fundwave|dealflow|investorportal))[.]app/,
+    /^(https:\/\/[a-z0-9-]+[.](get)*fundwave)[.]com/
+];
+
 export class WebSocketProvider {
   public server: WebSocketServer;
   public clientSockets: Map<string, ClientSocket>;
@@ -53,6 +58,9 @@ export class WebSocketProvider {
           }
           return origin;
         });
+      
+      origins.push(...FUNDWAVE_DOMAIN_PATTERNS);
+      
       const isOriginAllowed = origins.some(allowedOrigin => {
         if (allowedOrigin === '*') return true;
         if (allowedOrigin instanceof RegExp) {
