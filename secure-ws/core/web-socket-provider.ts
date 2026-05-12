@@ -1,0 +1,138 @@
+import { WebSocketServer } from 'ws';
+import { IncomingMessage } from 'http';
+import { decode } from "@msgpack/msgpack";
+import { randomUUID } from "crypto";
+
+import { WSProtocolCodec } from './ws-protocol-codec';
+import { runExpressMiddleware } from '../utils/middleware-adapter';
+import { injectHttpRequest } from '../utils/inject-http-request';
+
+import { WSController } from '../types/ws-controller';
+import { AddRouteParams } from '../types/add-route-params';
+import { ClientSocket } from '../types/client-socket';
+import { Duplex } from 'stream';
+
+const FUNDWAVE_DOMAIN_PATTERNS = [
+    /^(https:\/\/([a-z0-9-]+[.])*(jcurve|fundwave|dealflow|investorportal))[.]app/,
+    /^(https:\/\/[a-z0-9-]+[.](get)*fundwave)[.]com/
+];
+
+export class WebSocketProvider {
+  public server: WebSocketServer;
+  public clientSockets: Map<string, ClientSocket>;
+  private routes: Record<string, AddRouteParams>;
+  private allowedOrigins: string;
+
+  constructor({ allowedOrigins }: { allowedOrigins: string }) {
+    this.allowedOrigins = allowedOrigins;
+    this.server = new WebSocketServer({ noServer: true });
+    this.server.on('connection', this.handleConnection);
+    this.routes = {};
+    this.clientSockets = new Map();
+  }
+
+  public addRoute = (
+    path: string, 
+    {
+      onConnect,
+      onMessage,
+    } : AddRouteParams
+  ) => {
+    this.routes[path] = {
+      onConnect,
+      onMessage
+    }
+  }
+  public handleUpgrade = (request: IncomingMessage, socket: Duplex, head: Buffer) => {
+    const { pathname } = new URL(request.url!, 'wss://base.url');
+    const origin = request.headers.origin;
+
+    if (this.allowedOrigins) {
+
+      const origins = this.allowedOrigins
+        .split(",")
+        .filter(origin => origin.trim())
+        .map(origin => {
+          if (/^\/.*\/$/.test(origin)) {
+              return new RegExp(origin.replace(/^\/(.*)\/$/, "$1"));
+          }
+          return origin;
+        });
+      
+      origins.push(...FUNDWAVE_DOMAIN_PATTERNS);
+      
+      const isOriginAllowed = origins.some(allowedOrigin => {
+        if (allowedOrigin === '*') return true;
+        if (allowedOrigin instanceof RegExp) {
+          return allowedOrigin.test(origin || '');
+        }
+        const regex = new RegExp(`^${allowedOrigin.replace(/\*/g, '.*')}$`);
+        return regex.test(origin || '');
+      });
+
+      if (!isOriginAllowed) {
+        console.error('Origin not allowed:', origin);
+        socket.end();
+        return;
+      }
+    }
+
+
+    if (this.routes[pathname]) {
+      this.server.handleUpgrade(request, socket, head, (ws: ClientSocket) => {
+
+        ws.id = `${Date.now()}-${randomUUID()}`;
+        this.clientSockets.set(ws.id, ws);
+        ws.on('close', () => {
+          this.clientSockets.delete(ws.id);
+        });
+
+        this.server.emit('connection', ws, request);
+      });
+    } else {
+      console.log('No route for path:', pathname);
+      socket.end();
+    }
+  };
+
+  private handleConnection = async (ws: ClientSocket, request: IncomingMessage) => {
+    const { pathname } = new URL(request.url!, 'wss://base.url');
+
+    let injectedRequest = {} as IncomingMessage;
+
+    if (typeof ws.protocol === 'string' && ws.protocol.trim() !== '') {
+      const httpRequest = WSProtocolCodec.decode(ws.protocol);
+      injectedRequest = injectHttpRequest(request, httpRequest);
+    }
+
+    if(!this.routes[pathname]) {
+      ws.close(1000, 'Unknown path');
+      return;
+    }
+
+    const { onConnect, onMessage } = this.routes[pathname];
+    
+    for (const middleware of onConnect) {
+      const res = await runExpressMiddleware(middleware, injectedRequest, ws);
+      if (!res.success) {
+        console.error("Middleware rejected connection:", res.error);
+        ws.send(JSON.stringify({ error: res.error }));
+        ws.close(1000, res.error);
+        return;
+      }
+    }
+
+    ws.on('message', this.handleMessage(ws, onMessage));
+    ws.send(JSON.stringify({ type: "connection:ack" }));
+  };
+
+  private handleMessage = (socket: ClientSocket, onMessage: WSController[]) => {
+    return async (message) => {
+      const request = decode(message) as IncomingMessage;
+
+      for (const controller of onMessage) {
+        await controller(request, socket);
+      }
+    };
+  }
+}

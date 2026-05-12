@@ -1,0 +1,29 @@
+{
+  "name": "secure-ws",
+  "version": "0.0.2-websocket-provider.18",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fundwave/network-utils"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "author": "The Fundwave Authors",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/ws": "^8.18.1"
+  },
+  "dependencies": {
+    "@msgpack/msgpack": "^3.1.2",
+    "ws": "^8.18.3"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}
