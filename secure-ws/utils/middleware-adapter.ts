@@ -1,11 +1,11 @@
 import { IncomingMessage } from 'http';
 import { WebSocket } from 'ws';
 import { MockResponse } from '../mocks/express-response';
-import { MockResponse as MockResponseType } from '../types/mock-response';
-import { NextFunction, Request, Response } from 'express';
+import { ExpressMiddleware } from '../types/express-middleware';
+import { Request, Response } from 'express';
 
 export function runExpressMiddleware(
-  middleware: (req: Request, res: MockResponseType, next: NextFunction) => void,
+  middleware: ExpressMiddleware,
   request: IncomingMessage,
   socket: WebSocket
 ): Promise<{ success: boolean; error?: string }> {
@@ -25,7 +25,7 @@ export function runExpressMiddleware(
     };
 
     try {
-      middleware(request as Request, mockRes as MockResponseType, next);
+      middleware(request as Request, mockRes as unknown as Response, next);
     } catch (error) {
       console.error("Middleware exception:", error);
       if (!nextCalled) {

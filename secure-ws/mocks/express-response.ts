@@ -2,7 +2,7 @@ import { WebSocket } from "ws";
 import { MockResponse as MockResponseType } from "../types/mock-response";
 
 export class MockResponse implements MockResponseType {
-  private socket: WebSocket;
+  public socket: WebSocket;
   public statusCode: number = 200;
 
   constructor(socket: WebSocket) {
