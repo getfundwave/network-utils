@@ -5,6 +5,10 @@ on:
     paths:
       - "ssm-env-util/**"
 
+permissions:
+  contents: write
+  id-token: write
+
 env:
   BRANCH_TAG: "${{ github.ref_name == 'main' && 'latest' || github.ref_name }}"
   BRANCH: ${{ github.ref_name }}
@@ -44,6 +48,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+          registry-url: "https://registry.npmjs.org"
 
       - uses: actions/checkout@v3
         with:
@@ -75,12 +80,7 @@ jobs:
 
       - name: Publish package to npm
         if: ${{ github.ref_name == 'main'}}
-        run: |
-          echo //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} > ~/.npmrc
-          echo registry=https://registry.npmjs.org/ >> ~/.npmrc
-          npm publish --tag $BRANCH_TAG --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPMJS_TOKEN}}
+        run: npm publish --provenance --tag $BRANCH_TAG --access public
 
       - name: Push changes
         uses: ad-m/github-push-action@master
