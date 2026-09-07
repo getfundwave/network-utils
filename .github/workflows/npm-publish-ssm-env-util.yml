@@ -83,6 +83,9 @@ jobs:
         if: ${{ github.ref_name == 'main'}}
         run: npm publish --provenance --tag $BRANCH_TAG --access public
 
+      - name: Pull latest changes
+        run: git pull --rebase origin "$BRANCH"
+
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
