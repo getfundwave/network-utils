@@ -21,10 +21,10 @@ jobs:
       run:
         working-directory: "jwks-slim"
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
       - name: Install dependencies
         run: npm ci
       - name: Run tests
@@ -47,12 +47,12 @@ jobs:
           app_id: ${{ vars.FUNDABOT_APP_ID }}
           private_key: ${{ secrets.FUNDABOT_PRIVATE_KEY }}
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           token: ${{ github.ref_name == 'main' && steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}
 
