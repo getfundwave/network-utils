@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "jwks-slim/**"
+      - ".github/workflows/npm-publish.yml"
 
 permissions:
   contents: write
